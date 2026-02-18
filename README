@@ -1,0 +1,5 @@
+python main_run_lote.py --in estudiantes_lote_001.xlsx --out estudiantes_lote_001_enriquecido.xlsx
+
+
+python main_run_lote.py ## escrito en codigo 
+

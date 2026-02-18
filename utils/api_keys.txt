@@ -1,0 +1,174 @@
+# utils/api_keys.py
+from __future__ import annotations
+
+import os
+import time
+import random
+from dataclasses import dataclass
+import requests
+
+BRAVE_ENDPOINT = "https://api.search.brave.com/res/v1/web/search"
+
+@dataclass
+class KeyStatus:
+    ok: bool
+    reason: str
+    status_code: int | None = None
+
+class BraveKeyManager:
+    """
+    Administra múltiples API keys.
+    - Si una key se rate-limitea (429) o falla (401/403), rota a la siguiente.
+    - Si hay 5xx o network error, reintenta sin rotar inmediatamente.
+    """
+    def __init__(self, keys: list[str]):
+        self.keys = [k.strip() for k in keys if k and k.strip()]
+        if not self.keys:
+            raise RuntimeError("No se encontraron Brave API Keys en .env")
+        self.idx = 0
+
+    @staticmethod
+    def from_env() -> "BraveKeyManager":
+        # 1) BRAVE_API_KEYS=key1,key2,key3
+        keys_csv = os.getenv("BRAVE_API_KEYS", "").strip()
+        keys: list[str] = []
+
+        if keys_csv:
+            keys = [k.strip() for k in keys_csv.split(",") if k.strip()]
+
+        # 2) BRAVE_API_KEY_1, BRAVE_API_KEY_2, ...
+        if not keys:
+            i = 1
+            while True:
+                k = os.getenv(f"BRAVE_API_KEY_{i}", "").strip()
+                if not k:
+                    break
+                keys.append(k)
+                i += 1
+
+        # 3) fallback: BRAVE_API_KEY
+        if not keys:
+            k = os.getenv("BRAVE_API_KEY", "").strip()
+            if k:
+                keys = [k]
+
+        return BraveKeyManager(keys)
+
+    def current(self) -> str:
+        return self.keys[self.idx]
+
+    def rotate(self) -> bool:
+        """Pasa a la siguiente key. Devuelve False si ya no hay más."""
+        if self.idx + 1 >= len(self.keys):
+            return False
+        self.idx += 1
+        return True
+
+    def check_key(self, key: str, timeout: int = 15) -> KeyStatus:
+        """
+        Chequeo liviano: realiza una búsqueda mínima.
+        """
+        headers = {"Accept": "application/json", "X-Subscription-Token": key}
+        params = {"q": "site:linkedin.com/in test", "count": 1}
+        try:
+            r = requests.get(BRAVE_ENDPOINT, headers=headers, params=params, timeout=timeout)
+            if r.status_code == 200:
+                return KeyStatus(ok=True, reason="OK", status_code=200)
+            if r.status_code in (401, 403):
+                return KeyStatus(ok=False, reason="UNAUTHORIZED_OR_FORBIDDEN", status_code=r.status_code)
+            if r.status_code == 429:
+                return KeyStatus(ok=False, reason="RATE_LIMIT", status_code=429)
+            if 500 <= r.status_code < 600:
+                return KeyStatus(ok=False, reason="SERVER_ERROR", status_code=r.status_code)
+            return KeyStatus(ok=False, reason="OTHER_ERROR", status_code=r.status_code)
+        except requests.RequestException:
+            return KeyStatus(ok=False, reason="NETWORK_ERROR", status_code=None)
+
+    def ensure_working_key(self, max_rotations: int | None = None) -> str:
+        """
+        Garantiza una key funcional. Si la actual no sirve, rota hasta encontrar una OK.
+        """
+        rotations = 0
+        while True:
+            key = self.current()
+            st = self.check_key(key)
+            if st.ok:
+                return key
+
+            # Si es error temporal, espera un poco y prueba sin rotar (por si Brave está inestable)
+            if st.reason in ("SERVER_ERROR", "NETWORK_ERROR"):
+                time.sleep(1.0 + random.uniform(0.2, 0.8))
+                continue
+
+            # Si es rate limit o key inválida, rota
+            if st.reason in ("RATE_LIMIT", "UNAUTHORIZED_OR_FORBIDDEN"):
+                if not self.rotate():
+                    raise RuntimeError("Se agotaron las Brave API keys (todas rate-limited o inválidas).")
+                rotations += 1
+                if max_rotations is not None and rotations >= max_rotations:
+                    raise RuntimeError("No se encontró una Brave API key funcional dentro del límite de rotaciones.")
+                continue
+
+            # Cualquier otro: rota una vez; si no hay, falla
+            if not self.rotate():
+                raise RuntimeError(f"Brave API keys fallando. Último status: {st.status_code} ({st.reason})")
+            rotations += 1
+
+
+def brave_search_with_rotation(
+    key_manager: BraveKeyManager,
+    query: str,
+    count: int = 8,
+    max_retries: int = 5
+) -> list[dict]:
+    """
+    Búsqueda Brave con:
+    - reintentos/backoff
+    - rotación de keys en 429 / 401 / 403
+    """
+    last_err = None
+
+    for attempt in range(max_retries):
+        key = key_manager.ensure_working_key()
+        headers = {"Accept": "application/json", "X-Subscription-Token": key}
+        params = {"q": query, "count": count}
+
+        try:
+            r = requests.get(BRAVE_ENDPOINT, headers=headers, params=params, timeout=30)
+
+            # 429: rota key y reintenta
+            if r.status_code == 429:
+                if not key_manager.rotate():
+                    raise RuntimeError("Rate limit en todas las keys (429).")
+                time.sleep((2 ** attempt) + random.uniform(0.2, 1.2))
+                continue
+
+            # 401/403: key inválida/no autorizada -> rota y reintenta
+            if r.status_code in (401, 403):
+                if not key_manager.rotate():
+                    raise RuntimeError("Todas las keys están inválidas/no autorizadas (401/403).")
+                time.sleep(0.6 + random.uniform(0.2, 0.8))
+                continue
+
+            # 5xx: backoff sin rotar
+            if 500 <= r.status_code < 600:
+                time.sleep((2 ** attempt) + random.uniform(0.2, 1.2))
+                continue
+
+            r.raise_for_status()
+            data = r.json()
+
+            results = []
+            for item in (data.get("web", {}) or {}).get("results", []) or []:
+                results.append({
+                    "url": item.get("url", "") or "",
+                    "title": item.get("title", "") or "",
+                    "snippet": item.get("description", "") or "",
+                })
+            return results
+
+        except Exception as e:
+            last_err = e
+            time.sleep((2 ** attempt) + random.uniform(0.2, 1.2))
+
+    raise RuntimeError(f"Brave search falló tras {max_retries} reintentos. Último error: {last_err}")
