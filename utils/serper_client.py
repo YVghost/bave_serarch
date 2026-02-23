@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import time
-import random
 import json
 from datetime import datetime, timedelta
 from dataclasses import dataclass, asdict
@@ -12,15 +11,10 @@ from pathlib import Path
 
 SERPER_ENDPOINT = "https://google.serper.dev/search"
 REQUESTS_LOG_FILE = "serper_keys_requests.json"
-REQUEST_LIMIT = 980
-GRACE_DAYS = 1
 
-
-@dataclass
-class KeyStatus:
-    ok: bool
-    reason: str
-    status_code: int | None = None
+REQUEST_LIMIT = 980          # límite seguro antes de 1000
+GRACE_DAYS = 1               # días extra de seguridad
+BASE_DELAY = 0.5             # espera base entre requests
 
 
 @dataclass
@@ -35,7 +29,7 @@ class KeyUsage:
             return False
         return datetime.now() < datetime.fromisoformat(self.disabled_until)
 
-    def increment_usage(self):
+    def increment_usage(self) -> bool:
         self.request_count += 1
         self.last_request_date = datetime.now().isoformat()
 
@@ -61,10 +55,10 @@ class SerperKeyManager:
         self._find_first_valid_key()
 
     def _load_usage(self):
-        log_path = Path(self.usage_log_file)
-        if log_path.exists():
+        path = Path(self.usage_log_file)
+        if path.exists():
             try:
-                with open(log_path, "r") as f:
+                with open(path, "r") as f:
                     data = json.load(f)
                     for key, usage_data in data.items():
                         self.usage[key] = KeyUsage(**usage_data)
@@ -91,8 +85,7 @@ class SerperKeyManager:
 
     def _find_first_valid_key(self):
         for i in range(len(self.keys)):
-            key = self.keys[i]
-            if not self.usage[key].is_disabled():
+            if not self.usage[self.keys[i]].is_disabled():
                 self.idx = i
                 return
         raise RuntimeError("Todas las SERPER keys están deshabilitadas.")
@@ -100,76 +93,24 @@ class SerperKeyManager:
     def current(self) -> str:
         return self.keys[self.idx]
 
-    def _increment_current_key_usage(self):
-        key = self.current()
-        disabled = self.usage[key].increment_usage()
-        self._save_usage()
-        if disabled:
-            print(f"Key {key[:8]}... alcanzó {REQUEST_LIMIT} requests.")
-            self.rotate()
-
     def rotate(self) -> bool:
         start = self.idx
         for _ in range(len(self.keys)):
             self.idx = (self.idx + 1) % len(self.keys)
             if not self.usage[self.current()].is_disabled():
+                print(f"Rotando a key: {self.current()[:8]}...")
                 return True
         self.idx = start
         return False
 
-    def check_key(self, key: str, timeout: int = 15) -> KeyStatus:
-        headers = {
-            "X-API-KEY": key,
-            "Content-Type": "application/json",
-        }
-        payload = {"q": "test", "num": 1}
+    def increment_current_key(self):
+        key = self.current()
+        disabled = self.usage[key].increment_usage()
+        self._save_usage()
 
-        try:
-            r = requests.post(SERPER_ENDPOINT, headers=headers, json=payload, timeout=timeout)
-
-            if r.status_code == 200:
-                return KeyStatus(True, "OK", 200)
-            if r.status_code in (401, 403):
-                return KeyStatus(False, "UNAUTHORIZED_OR_FORBIDDEN", r.status_code)
-            if r.status_code == 429:
-                return KeyStatus(False, "RATE_LIMIT", 429)
-            if 500 <= r.status_code < 600:
-                return KeyStatus(False, "SERVER_ERROR", r.status_code)
-            return KeyStatus(False, "OTHER_ERROR", r.status_code)
-
-        except requests.RequestException:
-            return KeyStatus(False, "NETWORK_ERROR", None)
-
-    def ensure_working_key(self) -> str:
-        rotations = 0
-        while rotations < len(self.keys):
-            key = self.current()
-
-            if self.usage[key].is_disabled():
-                if not self.rotate():
-                    break
-                rotations += 1
-                continue
-
-            status = self.check_key(key)
-            if status.ok:
-                return key
-
-            if status.reason in ("RATE_LIMIT", "UNAUTHORIZED_OR_FORBIDDEN"):
-                if not self.rotate():
-                    break
-                rotations += 1
-                continue
-
-            if status.reason in ("SERVER_ERROR", "NETWORK_ERROR"):
-                time.sleep(1)
-                continue
-
-            if not self.rotate():
-                break
-            rotations += 1
-
-        raise RuntimeError("No se encontró SERPER API key funcional.")
+        if disabled:
+            print(f"Key {key[:8]} alcanzó límite mensual. Deshabilitada.")
+            self.rotate()
 
     @staticmethod
     def from_env() -> "SerperKeyManager":
@@ -206,7 +147,12 @@ def serper_search_with_rotation(
     last_err = None
 
     for attempt in range(max_retries):
-        key = key_manager.ensure_working_key()
+        key = key_manager.current()
+
+        if key_manager.usage[key].is_disabled():
+            if not key_manager.rotate():
+                raise RuntimeError("No hay keys disponibles.")
+            continue
 
         headers = {
             "X-API-KEY": key,
@@ -219,15 +165,24 @@ def serper_search_with_rotation(
         }
 
         try:
-            r = requests.post(SERPER_ENDPOINT, headers=headers, json=payload, timeout=30)
+            time.sleep(BASE_DELAY)
+
+            r = requests.post(
+                SERPER_ENDPOINT,
+                headers=headers,
+                json=payload,
+                timeout=30
+            )
 
             if r.status_code == 429:
+                print("Rate limit detectado. Rotando key.")
                 if not key_manager.rotate():
                     raise RuntimeError("Rate limit en todas las keys.")
                 time.sleep(2 ** attempt)
                 continue
 
             if r.status_code in (401, 403):
+                print("Key inválida. Rotando.")
                 if not key_manager.rotate():
                     raise RuntimeError("Todas las keys inválidas.")
                 continue
@@ -239,7 +194,7 @@ def serper_search_with_rotation(
             r.raise_for_status()
             data = r.json()
 
-            key_manager._increment_current_key_usage()
+            key_manager.increment_current_key()
 
             results = []
             for item in data.get("organic", []):
@@ -257,4 +212,6 @@ def serper_search_with_rotation(
             last_err = e
             time.sleep(2 ** attempt)
 
-    raise RuntimeError(f"Serper search falló tras {max_retries} reintentos. Último error: {last_err}")
+    raise RuntimeError(
+        f"Serper search falló tras {max_retries} reintentos. Último error: {last_err}"
+    )

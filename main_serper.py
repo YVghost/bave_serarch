@@ -17,9 +17,10 @@ from utils.carreras_synonyms import expand_carrera_keywords
 
 # -------------------------- CONFIG RATE LIMIT --------------------------
 
-DELAY_API_MIN = 1.2      # mínimo segundos entre llamadas API
-DELAY_API_MAX = 2.5      # máximo segundos entre llamadas API
-DELAY_ROW = 0.8          # pausa entre cada fila procesada
+DELAY_API_MIN = 1.2
+DELAY_API_MAX = 2.5
+DELAY_ROW = 0.8
+SAVE_EVERY = 10  # 🔥 guardar cada N filas
 
 
 def wait_api():
@@ -140,7 +141,7 @@ def process_row(estudiante, carrera, key_manager, cache):
             if ck in cache:
                 return cache[ck]
 
-            wait_api()  #  pausa antes de llamar API
+            wait_api()
 
             results = serper_search_with_rotation(
                 key_manager=key_manager,
@@ -234,16 +235,24 @@ def build_output(score, item, flags, scored_all, conf):
     }
 
 
-# -------------------------- Lotes --------------------------
+# -------------------------- Lotes con guardado incremental --------------------------
 
 def run_lote(input_xlsx, output_xlsx, key_manager, cache, cache_path):
 
-    df = pd.read_excel(input_xlsx)
+    if Path(output_xlsx).exists():
+        print("Reanudando desde archivo existente...")
+        df = pd.read_excel(output_xlsx)
+    else:
+        df = pd.read_excel(input_xlsx)
+        df = ensure_columns(df)
+        df.to_excel(output_xlsx, index=False)  # crear archivo inmediatamente
+
     df = ensure_columns(df)
 
     for i, row in df.iterrows():
         try:
             linkedin_val = safe_str(row.get("LinkedIn"))
+
             if is_already_filled(linkedin_val) or linkedin_val == "SR":
                 continue
 
@@ -263,21 +272,24 @@ def run_lote(input_xlsx, output_xlsx, key_manager, cache, cache_path):
             df.at[i, "Match_UDLA"] = str(out["match_udla"])
             df.at[i, "Match_Carrera"] = str(out["match_carrera"])
 
-            if (i + 1) % 50 == 0:
+            if (i + 1) % SAVE_EVERY == 0:
+                print(f"💾 Guardando progreso en fila {i+1}")
+                df.to_excel(output_xlsx, index=False)
                 save_cache(cache, cache_path)
 
-            time.sleep(DELAY_ROW)  # 👈 pausa entre filas
+            time.sleep(DELAY_ROW)
 
         except Exception:
             traceback.print_exc()
+            print("⚠ Error detectado. Guardando progreso...")
+            df.to_excel(output_xlsx, index=False)
+            save_cache(cache, cache_path)
             continue
 
+    df.to_excel(output_xlsx, index=False)
     save_cache(cache, cache_path)
 
-    try:
-        df.to_excel(output_xlsx, index=False)
-    except Exception:
-        print("Error guardando Excel:", output_xlsx)
+    print("✅ Lote completado correctamente.")
 
 
 # -------------------------- MAIN --------------------------
@@ -301,10 +313,6 @@ def main():
     for f in lotes:
         out_file = out_dir / f"{f.stem}_enriquecido.xlsx"
 
-        if out_file.exists():
-            print(f"[SKIP] Ya existe: {out_file.name}")
-            continue
-
         print(f"[RUN] {f.name} -> {out_file.name}")
 
         run_lote(
@@ -315,7 +323,7 @@ def main():
             cache_path=cache_path,
         )
 
-    print("Listo. Todos los lotes procesados.")
+    print("🎉 Listo. Todos los lotes procesados.")
 
 
 if __name__ == "__main__":
