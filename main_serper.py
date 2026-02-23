@@ -20,7 +20,7 @@ from utils.carreras_synonyms import expand_carrera_keywords
 DELAY_API_MIN = 1.2
 DELAY_API_MAX = 2.5
 DELAY_ROW = 0.8
-SAVE_EVERY = 10  # 🔥 guardar cada N filas
+SAVE_EVERY = 10  #  guardar cada N filas
 
 
 def wait_api():
