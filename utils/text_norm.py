@@ -1,21 +1,14 @@
+from __future__ import annotations
+
 import re
 from unidecode import unidecode
 
+# Siglas de 2 letras útiles que NO debemos botar
+ACRONYMS_OK = {
+    "it", "cs", "bi", "ds", "ir", "md", "pt", "mba", "pmp",
+    "hse", "osh", "sso", "scm", "omt", "dvm", "vet"
+}
 
-def tokens(s: str) -> list[str]:
-    """Tokeniza conservando solo letras/números (simple)."""
-    s = norm(s)
-    s = re.sub(r"[^a-z0-9 ]+", " ", s)
-    s = re.sub(r"\s+", " ", s).strip()
-    return [t for t in s.split(" ") if t]
-
-def contains_any(haystack: str, needles: list[str]) -> bool:
-    h = norm(haystack)
-    return any(norm(n) in h for n in needles if n)
-
-def count_hits(haystack: str, needles: list[str]) -> int:
-    h = norm(haystack)
-    return sum(1 for n in needles if n and norm(n) in h)
 
 def norm(s: str) -> str:
     """
@@ -23,7 +16,7 @@ def norm(s: str) -> str:
     - convierte a str
     - quita tildes
     - lower
-    - limpia espacios raros (incluye NBSP)
+    - limpia espacios raros (incluye NBSP y zero-width)
     """
     if s is None:
         return ""
@@ -34,13 +27,36 @@ def norm(s: str) -> str:
     s = re.sub(r"\s+", " ", s)
     return s
 
-def norm_keep_symbols(s: str) -> str:
-    """Como norm pero no elimina signos; útil si quieres ver texto original normalizado."""
-    return norm(s)
 
 def simple_tokens(s: str) -> list[str]:
+    """
+    Tokens (letras/números) ya normalizados.
+    """
     s = norm(s)
     s = re.sub(r"[^a-z0-9 ]+", " ", s)
     s = re.sub(r"\s+", " ", s).strip()
     return [t for t in s.split() if t]
 
+
+def token_set(s: str) -> set[str]:
+    return set(simple_tokens(s))
+
+
+def contains_any_smart(text: str, needles: list[str]) -> bool:
+    """
+    - Frases (con espacios): substring sobre text normalizado
+    - Tokens (una palabra/sigla): match exacto por token_set
+    """
+    t = norm(text)
+    ts = token_set(t)
+    for n in needles:
+        nn = norm(n)
+        if not nn:
+            continue
+        if " " in nn:
+            if nn in t:
+                return True
+        else:
+            if nn in ts:
+                return True
+    return False

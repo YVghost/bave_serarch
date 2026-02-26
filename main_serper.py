@@ -10,17 +10,24 @@ import pandas as pd
 from dotenv import load_dotenv
 
 from utils.serper_client import SerperKeyManager, serper_search_with_rotation
-from utils.nombres import variantes_nombres
-from utils.scoring import is_profile_url, score_candidate, infer_study_status
+from utils.scoring import (
+    is_profile_url,
+    score_candidate,
+    infer_study_status,
+    name_closeness_for_item,
+)
 from utils.carreras_synonyms import expand_carrera_keywords
 
 
-# -------------------------- CONFIG RATE LIMIT --------------------------
+# -------------------------- CONFIG --------------------------
 
 DELAY_API_MIN = 1.2
 DELAY_API_MAX = 2.5
 DELAY_ROW = 0.8
-SAVE_EVERY = 10  #  guardar cada N filas
+SAVE_EVERY = 10
+
+RETRY_SR = True
+EXPECTED_COUNTRY = "ec"
 
 
 def wait_api():
@@ -56,18 +63,56 @@ def safe_str(value) -> str:
     return str(value).strip()
 
 
-# -------------------------- Queries --------------------------
+# -------------------------- Variantes de nombre --------------------------
 
-def build_q1(nombre_var: str) -> str:
-    return f'site:linkedin.com/in ("{nombre_var}") (UDLA OR "Universidad de Las Américas") Ecuador'
+def mejores_variantes_para_query(nombre_completo: str) -> list[str]:
+    """
+    Dataset: APELLIDO1 APELLIDO2 NOMBRE1 NOMBRE2...
+    Variantes (máximo 2):
+      1) "N1 AP1"
+      2) "N1 N2 AP1 AP2" (si hay N2) / fallback: "N1 AP1 AP2"
+    """
+    parts = [p for p in (nombre_completo or "").split() if p]
+    if len(parts) < 3:
+        return parts[:1] if parts else []
+
+    ap1 = parts[0]
+    ap2 = parts[1] if len(parts) >= 2 else ""
+    nombres = parts[2:] if len(parts) >= 3 else []
+
+    n1 = nombres[0] if len(nombres) >= 1 else ""
+    n2 = nombres[1] if len(nombres) >= 2 else ""
+
+    variants = []
+    if n1 and ap1:
+        variants.append(f"{n1} {ap1}".strip())
+
+    if n1 and n2:
+        variants.append(f"{n1} {n2} {ap1} {ap2}".strip())
+    else:
+        variants.append(f"{n1} {ap1} {ap2}".strip())
+
+    out, seen = [], set()
+    for v in variants:
+        k = v.lower()
+        if k and k not in seen:
+            out.append(v)
+            seen.add(k)
+
+    return out[:2]
 
 
-def build_q2(nombre_var: str, carrera: str, max_terms: int = 6) -> str:
+# -------------------------- Query builder (2 fases) --------------------------
+
+def build_query(nombre_var: str, carrera: str, mode: str, max_terms: int = 4) -> str:
+    base = f'site:linkedin.com/in ("{nombre_var}")'
+
+    if mode == "name_ec":
+        return base + ' (Ecuador OR Quito OR Guayaquil OR Cuenca OR Ambato OR Manta)'
+
+    # strict
     kws = expand_carrera_keywords(carrera) or []
-
-    seen = set()
-    picked = []
-
+    picked, seen = [], set()
     for k in kws:
         k = (k or "").strip()
         if not k:
@@ -80,12 +125,14 @@ def build_q2(nombre_var: str, carrera: str, max_terms: int = 6) -> str:
         if len(picked) >= max_terms:
             break
 
-    if not picked:
-        carrera_part = f'"{carrera}"'
-    else:
-        carrera_part = "(" + " OR ".join([f'"{k}"' for k in picked]) + ")"
+    carrera_part = "(" + " OR ".join([f'"{k}"' for k in picked]) + ")" if picked else f'"{carrera}"'
 
-    return f'site:linkedin.com/in ("{nombre_var}") {carrera_part} (UDLA OR "Universidad de Las Américas")'
+    return (
+        f'{base} '
+        f'{carrera_part} '
+        f'(UDLA OR "Universidad de Las Américas") '
+        f'(Ecuador OR Quito OR Guayaquil OR Cuenca OR Ambato OR Manta)'
+    )
 
 
 # -------------------------- Excel helpers --------------------------
@@ -107,15 +154,10 @@ def ensure_columns(df: pd.DataFrame) -> pd.DataFrame:
         if col not in df.columns:
             df[col] = default
 
-    df["LinkedIn"] = df["LinkedIn"].astype("string")
-    df["Confianza"] = df["Confianza"].astype("string")
-    df["Estudia_o_Estudio"] = df["Estudia_o_Estudio"].astype("string")
-    df["Candidatos_Top3"] = df["Candidatos_Top3"].astype("string")
-    df["Match_UDLA"] = df["Match_UDLA"].astype("string")
-    df["Match_Carrera"] = df["Match_Carrera"].astype("string")
+    for col in ["LinkedIn", "Confianza", "Estudia_o_Estudio", "Candidatos_Top3", "Match_UDLA", "Match_Carrera"]:
+        df[col] = df[col].astype("string")
 
     df["Score"] = pd.to_numeric(df["Score"], errors="coerce").fillna(0).astype(int)
-
     return df
 
 
@@ -124,16 +166,21 @@ def is_already_filled(v: str) -> bool:
     return v.startswith("http") and "linkedin.com" in v.lower()
 
 
-# -------------------------- Procesamiento fila --------------------------
+# -------------------------- Procesamiento fila (trigger mejorado) --------------------------
 
-def process_row(estudiante, carrera, key_manager, cache):
-
+def process_row(estudiante: str, carrera: str, key_manager, cache: dict, expected_country: str = EXPECTED_COUNTRY):
+    """
+    - Evaluamos candidatos (filtrados por gates: nombre + Ecuador + UDLA).
+    - Guardamos TOP3 por score para auditoría.
+    - PERO elegimos best_url por name_closeness (y score como desempate).
+    """
     try:
-        variants = variantes_nombres(estudiante, max_variantes=3)
+        variants = mejores_variantes_para_query(estudiante)
         if not variants:
             return empty_result()
 
-        best = None
+        # scored_all: lista de tuplas con métricas
+        # (score, name_close, item, flags)
         scored_all = []
 
         def fetch_query(q: str, count: int):
@@ -142,62 +189,57 @@ def process_row(estudiante, carrera, key_manager, cache):
                 return cache[ck]
 
             wait_api()
-
             results = serper_search_with_rotation(
                 key_manager=key_manager,
                 query=q,
                 count=count,
-                max_retries=5
+                max_retries=5,
             )
-
             cache[ck] = results
             return results
 
         def evaluate(results):
-            nonlocal best, scored_all
-
             profiles = [it for it in results if is_profile_url(it.get("url", ""))]
             if not profiles:
-                return None
+                return
 
-            for it in profiles[:25]:
-                s, flags, _ = score_candidate(carrera, estudiante, it)
+            for it in profiles[:50]:
+                s, flags, _ = score_candidate(carrera, estudiante, it, expected_country=expected_country)
                 s = int(s)
 
-                scored_all.append((s, it, flags))
+                # solo calculamos closeness si pasó gates (score > 0)
+                nc = name_closeness_for_item(estudiante, it) if s > 0 else -999
 
-                if best is None or s > best[0]:
-                    best = (s, it, flags)
+                scored_all.append((s, nc, it, flags))
 
-                if s >= 85 and flags.get("udla") and flags.get("carrera"):
-                    return build_output(s, it, flags, scored_all, "ALTA")
+        for v in variants:
+            q1 = build_query(v, carrera, mode="name_ec")
+            evaluate(fetch_query(q1, count=20))
 
-            return None
+            q2 = build_query(v, carrera, mode="strict", max_terms=4)
+            evaluate(fetch_query(q2, count=10))
 
-        v1 = variants[0]
-
-        r = evaluate(fetch_query(build_q1(v1), 5))
-        if r:
-            return r
-
-        if best and best[0] >= 75:
-            return build_output(best[0], best[1], best[2], scored_all, "REVISAR")
-
-        r = evaluate(fetch_query(build_q2(v1, carrera), 8))
-        if r:
-            return r
-
-        if not best:
+        # Si no hay nada válido (score>0) => SR
+        valid = [x for x in scored_all if x[0] > 0]
+        if not valid:
             return empty_result()
 
-        if best[0] >= 85:
+        # TOP3 para mostrar: por score
+        top3_by_score = sorted(valid, key=lambda x: x[0], reverse=True)[:3]
+
+        # BEST REAL: por name_closeness (y score como desempate)
+        best = sorted(valid, key=lambda x: (x[1], x[0]), reverse=True)[0]
+        best_score, best_nc, best_item, best_flags = best
+
+        # Confianza en base a score (puedes endurecerlo si quieres)
+        if best_score >= 85:
             conf = "ALTA"
-        elif best[0] >= 65:
+        elif best_score >= 65:
             conf = "REVISAR"
         else:
             conf = "BAJA"
 
-        return build_output(best[0], best[1], best[2], scored_all, conf)
+        return build_output(best_score, best_item, best_flags, top3_by_score, conf)
 
     except Exception:
         traceback.print_exc()
@@ -216,44 +258,49 @@ def empty_result():
     }
 
 
-def build_output(score, item, flags, scored_all, conf):
-    scored_all.sort(key=lambda x: x[0], reverse=True)
-    top3 = " ; ".join([f"{x[1].get('url','')}|{x[0]}" for x in scored_all[:3]])
+def build_output(best_score, best_item, best_flags, top3_by_score, conf):
+    # top3_by_score viene como (score, name_close, item, flags)
+    top3 = " ; ".join([f"{x[2].get('url','')}|{x[0]}" for x in top3_by_score])
 
     study = infer_study_status(
-        (item.get("title", "") or "") + " " + (item.get("snippet", "") or "")
+        (best_item.get("title", "") or "") + " " + (best_item.get("snippet", "") or "")
     )
 
     return {
-        "best_url": item.get("url", "") if conf == "ALTA" else "",
-        "score": int(score),
+        "best_url": best_item.get("url", "") or "",
+        "score": int(best_score),
         "conf": conf,
         "study": study,
         "top3": top3,
-        "match_udla": "SI" if flags.get("udla") else "NO/DUDOSO",
-        "match_carrera": "SI" if flags.get("carrera") else "NO/DUDOSO",
+        "match_udla": "SI" if best_flags.get("udla") else "NO/DUDOSO",
+        "match_carrera": "SI" if best_flags.get("carrera") else "NO/DUDOSO",
     }
 
 
 # -------------------------- Lotes con guardado incremental --------------------------
 
 def run_lote(input_xlsx, output_xlsx, key_manager, cache, cache_path):
-
     if Path(output_xlsx).exists():
         print("Reanudando desde archivo existente...")
         df = pd.read_excel(output_xlsx)
     else:
         df = pd.read_excel(input_xlsx)
         df = ensure_columns(df)
-        df.to_excel(output_xlsx, index=False)  # crear archivo inmediatamente
+        df.to_excel(output_xlsx, index=False)
 
     df = ensure_columns(df)
 
     for i, row in df.iterrows():
         try:
             linkedin_val = safe_str(row.get("LinkedIn"))
+            score_val = int(row.get("Score") or 0)
+            conf_val = safe_str(row.get("Confianza"))
 
-            if is_already_filled(linkedin_val) or linkedin_val == "SR":
+            # Saltar solo si ya está finalizado de verdad
+            if is_already_filled(linkedin_val) and score_val > 0 and conf_val:
+                continue
+
+            if (not RETRY_SR) and (linkedin_val == "SR"):
                 continue
 
             estudiante = safe_str(row.get("Estudiante"))
@@ -262,7 +309,7 @@ def run_lote(input_xlsx, output_xlsx, key_manager, cache, cache_path):
             if not estudiante or not carrera:
                 continue
 
-            out = process_row(estudiante, carrera, key_manager, cache)
+            out = process_row(estudiante, carrera, key_manager, cache, expected_country=EXPECTED_COUNTRY)
 
             df.at[i, "LinkedIn"] = out["best_url"] if out["best_url"] else "SR"
             df.at[i, "Score"] = int(out["score"])
@@ -312,7 +359,6 @@ def main():
 
     for f in lotes:
         out_file = out_dir / f"{f.stem}_enriquecido.xlsx"
-
         print(f"[RUN] {f.name} -> {out_file.name}")
 
         run_lote(
