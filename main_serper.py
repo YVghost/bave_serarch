@@ -26,7 +26,11 @@ DELAY_API_MAX = 2.5
 DELAY_ROW = 0.8
 SAVE_EVERY = 10
 
+# Si False: NO reintenta filas SR (modo producción)
+# Si True : reintenta SR (modo calibración)
 RETRY_SR = True
+
+# País esperado para gating (scoring)
 EXPECTED_COUNTRY = "ec"
 
 
@@ -63,14 +67,18 @@ def safe_str(value) -> str:
     return str(value).strip()
 
 
-# -------------------------- Variantes de nombre --------------------------
+# -------------------------- Variantes de nombre (DATASET: AP1 AP2 N1 N2...) --------------------------
 
 def mejores_variantes_para_query(nombre_completo: str) -> list[str]:
     """
     Dataset: APELLIDO1 APELLIDO2 NOMBRE1 NOMBRE2...
-    Variantes (máximo 2):
-      1) "N1 AP1"
-      2) "N1 N2 AP1 AP2" (si hay N2) / fallback: "N1 AP1 AP2"
+
+    Queremos variantes "linkedin-friendly":
+    - N1 AP1
+    - N1 AP1 AP2
+    - N2 AP1 (si existe)
+
+    Esto reduce consumo y mejora recall.
     """
     parts = [p for p in (nombre_completo or "").split() if p]
     if len(parts) < 3:
@@ -84,14 +92,15 @@ def mejores_variantes_para_query(nombre_completo: str) -> list[str]:
     n2 = nombres[1] if len(nombres) >= 2 else ""
 
     variants = []
+
     if n1 and ap1:
         variants.append(f"{n1} {ap1}".strip())
-
-    if n1 and n2:
-        variants.append(f"{n1} {n2} {ap1} {ap2}".strip())
-    else:
         variants.append(f"{n1} {ap1} {ap2}".strip())
 
+    if n2 and ap1:
+        variants.append(f"{n2} {ap1}".strip())
+
+    # dedupe preservando orden
     out, seen = [], set()
     for v in variants:
         k = v.lower()
@@ -99,18 +108,24 @@ def mejores_variantes_para_query(nombre_completo: str) -> list[str]:
             out.append(v)
             seen.add(k)
 
-    return out[:2]
+    return out[:3]
 
 
 # -------------------------- Query builder (2 fases) --------------------------
 
 def build_query(nombre_var: str, carrera: str, mode: str, max_terms: int = 4) -> str:
+    """
+    mode:
+      - "name_ec": solo nombre + Ecuador (rápido para descubrir el perfil correcto)
+      - "strict": nombre + carrera + UDLA + Ecuador (validación fuerte)
+    """
     base = f'site:linkedin.com/in ("{nombre_var}")'
 
+    # Query ligera: encontrar perfiles por nombre + geo
     if mode == "name_ec":
         return base + ' (Ecuador OR Quito OR Guayaquil OR Cuenca OR Ambato OR Manta)'
 
-    # strict
+    # Query estricta: carrera + UDLA + geo
     kws = expand_carrera_keywords(carrera) or []
     picked, seen = [], set()
     for k in kws:
@@ -166,22 +181,30 @@ def is_already_filled(v: str) -> bool:
     return v.startswith("http") and "linkedin.com" in v.lower()
 
 
-# -------------------------- Procesamiento fila (trigger mejorado) --------------------------
+# -------------------------- Procesamiento fila --------------------------
 
 def process_row(estudiante: str, carrera: str, key_manager, cache: dict, expected_country: str = EXPECTED_COUNTRY):
     """
-    - Evaluamos candidatos (filtrados por gates: nombre + Ecuador + UDLA).
-    - Guardamos TOP3 por score para auditoría.
-    - PERO elegimos best_url por name_closeness (y score como desempate).
+    Adaptado al NUEVO scoring:
+
+    - score_candidate ya contiene gates estrictos:
+      * perfil real
+      * apellido en slug
+      * al menos 1 nombre
+      * Ecuador (según expected_country)
+      * UDLA obligatorio
+
+    - Guardamos TOP3 por SCORE.
+    - Elegimos BEST por (name_closeness, score) para evitar falsos positivos.
     """
     try:
         variants = mejores_variantes_para_query(estudiante)
         if not variants:
             return empty_result()
 
-        # scored_all: lista de tuplas con métricas
+        # scored_all items:
         # (score, name_close, item, flags)
-        scored_all = []
+        scored_all: list[tuple[int, int, dict, dict]] = []
 
         def fetch_query(q: str, count: int):
             ck = f"{count}::{q}"
@@ -204,14 +227,24 @@ def process_row(estudiante: str, carrera: str, key_manager, cache: dict, expecte
                 return
 
             for it in profiles[:50]:
-                s, flags, _ = score_candidate(carrera, estudiante, it, expected_country=expected_country)
+                s, flags, _ = score_candidate(
+                    carrera,
+                    estudiante,
+                    it,
+                    expected_country=expected_country
+                )
                 s = int(s)
 
-                # solo calculamos closeness si pasó gates (score > 0)
-                nc = name_closeness_for_item(estudiante, it) if s > 0 else -999
+                # gates estrictos => s>0 significa que pasó validación
+                if s <= 0:
+                    continue
 
+                nc = name_closeness_for_item(estudiante, it)
                 scored_all.append((s, nc, it, flags))
 
+        # 2 fases por variante:
+        # - "name_ec" trae candidatos por nombre+geo (rápido)
+        # - "strict" valida con carrera + UDLA + geo
         for v in variants:
             q1 = build_query(v, carrera, mode="name_ec")
             evaluate(fetch_query(q1, count=20))
@@ -219,19 +252,17 @@ def process_row(estudiante: str, carrera: str, key_manager, cache: dict, expecte
             q2 = build_query(v, carrera, mode="strict", max_terms=4)
             evaluate(fetch_query(q2, count=10))
 
-        # Si no hay nada válido (score>0) => SR
-        valid = [x for x in scored_all if x[0] > 0]
-        if not valid:
+        if not scored_all:
             return empty_result()
 
-        # TOP3 para mostrar: por score
-        top3_by_score = sorted(valid, key=lambda x: x[0], reverse=True)[:3]
+        # TOP3 por SCORE (auditoría)
+        top3_by_score = sorted(scored_all, key=lambda x: x[0], reverse=True)[:3]
 
-        # BEST REAL: por name_closeness (y score como desempate)
-        best = sorted(valid, key=lambda x: (x[1], x[0]), reverse=True)[0]
+        # BEST REAL por CLOSENESS y SCORE
+        best = sorted(scored_all, key=lambda x: (x[1], x[0]), reverse=True)[0]
         best_score, best_nc, best_item, best_flags = best
 
-        # Confianza en base a score (puedes endurecerlo si quieres)
+        # Confianza (puedes endurecer umbrales si deseas)
         if best_score >= 85:
             conf = "ALTA"
         elif best_score >= 65:
@@ -258,8 +289,8 @@ def empty_result():
     }
 
 
-def build_output(best_score, best_item, best_flags, top3_by_score, conf):
-    # top3_by_score viene como (score, name_close, item, flags)
+def build_output(best_score: int, best_item: dict, best_flags: dict, top3_by_score, conf: str):
+    # top3_by_score: (score, name_close, item, flags)
     top3 = " ; ".join([f"{x[2].get('url','')}|{x[0]}" for x in top3_by_score])
 
     study = infer_study_status(
@@ -296,10 +327,11 @@ def run_lote(input_xlsx, output_xlsx, key_manager, cache, cache_path):
             score_val = int(row.get("Score") or 0)
             conf_val = safe_str(row.get("Confianza"))
 
-            # Saltar solo si ya está finalizado de verdad
+            # Saltar si ya está finalizado (URL + score + confianza)
             if is_already_filled(linkedin_val) and score_val > 0 and conf_val:
                 continue
 
+            # No reintentar SR si RETRY_SR=False
             if (not RETRY_SR) and (linkedin_val == "SR"):
                 continue
 

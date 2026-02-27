@@ -3,3 +3,4 @@ openpyxl
 python-dotenv
 requests
 unidecode
+rapidfuzz

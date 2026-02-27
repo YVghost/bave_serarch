@@ -13,7 +13,7 @@ from pathlib import Path
 
 BRAVE_ENDPOINT = "https://api.search.brave.com/res/v1/web/search"
 REQUESTS_LOG_FILE = "brave_keys_requests.json"
-REQUEST_LIMIT = 980
+REQUEST_LIMIT = 2000
 GRACE_DAYS = 1  # Días de gracia después del mes
 
 @dataclass
