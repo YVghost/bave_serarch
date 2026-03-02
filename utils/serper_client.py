@@ -12,7 +12,7 @@ from pathlib import Path
 SERPER_ENDPOINT = "https://google.serper.dev/search"
 REQUESTS_LOG_FILE = "serper_keys_requests.json"
 
-REQUEST_LIMIT = 1500         # límite seguro antes de 1000
+REQUEST_LIMIT = 2500         # límite seguro antes de 1000
 GRACE_DAYS = 1               # días extra de seguridad
 BASE_DELAY = 0.5             # espera base entre requests
 

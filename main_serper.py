@@ -26,12 +26,10 @@ DELAY_API_MAX = 2.5
 DELAY_ROW = 0.8
 SAVE_EVERY = 10
 
-# Si False: NO reintenta filas SR (modo producción)
-# Si True : reintenta SR (modo calibración)
-RETRY_SR = True
+RETRY_SR = False
 
-# País esperado para gating (scoring)
-EXPECTED_COUNTRY = "ec"
+# Si encontramos score >= este valor → cortamos búsqueda
+EARLY_STOP_SCORE = 92
 
 
 def wait_api():
@@ -67,87 +65,66 @@ def safe_str(value) -> str:
     return str(value).strip()
 
 
-# -------------------------- Variantes de nombre (DATASET: AP1 AP2 N1 N2...) --------------------------
+# -------------------------- Variantes de nombre --------------------------
 
 def mejores_variantes_para_query(nombre_completo: str) -> list[str]:
-    """
-    Dataset: APELLIDO1 APELLIDO2 NOMBRE1 NOMBRE2...
-
-    Queremos variantes "linkedin-friendly":
-    - N1 AP1
-    - N1 AP1 AP2
-    - N2 AP1 (si existe)
-
-    Esto reduce consumo y mejora recall.
-    """
     parts = [p for p in (nombre_completo or "").split() if p]
     if len(parts) < 3:
         return parts[:1] if parts else []
 
     ap1 = parts[0]
-    ap2 = parts[1] if len(parts) >= 2 else ""
-    nombres = parts[2:] if len(parts) >= 3 else []
+    ap2 = parts[1]
+    nombres = parts[2:]
 
     n1 = nombres[0] if len(nombres) >= 1 else ""
     n2 = nombres[1] if len(nombres) >= 2 else ""
 
     variants = []
 
-    if n1 and ap1:
-        variants.append(f"{n1} {ap1}".strip())
-        variants.append(f"{n1} {ap1} {ap2}".strip())
+    if n1:
+        variants.append(f"{n1} {ap1}")
+        variants.append(f"{n1} {ap1} {ap2}")
 
-    if n2 and ap1:
-        variants.append(f"{n2} {ap1}".strip())
+    if n2:
+        variants.append(f"{n2} {ap1}")
 
-    # dedupe preservando orden
     out, seen = [], set()
     for v in variants:
-        k = v.lower()
-        if k and k not in seen:
+        v = v.strip()
+        if v and v.lower() not in seen:
             out.append(v)
-            seen.add(k)
+            seen.add(v.lower())
 
     return out[:3]
 
 
-# -------------------------- Query builder (2 fases) --------------------------
+# -------------------------- Query builder --------------------------
 
 def build_query(nombre_var: str, carrera: str, mode: str, max_terms: int = 4) -> str:
-    """
-    mode:
-      - "name_ec": solo nombre + Ecuador (rápido para descubrir el perfil correcto)
-      - "strict": nombre + carrera + UDLA + Ecuador (validación fuerte)
-    """
+
     base = f'site:linkedin.com/in ("{nombre_var}")'
+    udla_ec = '("UDLA (EC)" OR "Universidad de Las Américas (EC)" OR "Universidad de las Américas (EC)")'
 
-    # Query ligera: encontrar perfiles por nombre + geo
-    if mode == "name_ec":
-        return base + ' (Ecuador OR Quito OR Guayaquil OR Cuenca OR Ambato OR Manta)'
+    if mode == "name_udlaec":
+        return f"{base} {udla_ec}"
 
-    # Query estricta: carrera + UDLA + geo
     kws = expand_carrera_keywords(carrera) or []
     picked, seen = [], set()
+
     for k in kws:
         k = (k or "").strip()
         if not k:
             continue
-        nk = k.lower()
-        if nk in seen:
+        if k.lower() in seen:
             continue
-        seen.add(nk)
         picked.append(k)
+        seen.add(k.lower())
         if len(picked) >= max_terms:
             break
 
     carrera_part = "(" + " OR ".join([f'"{k}"' for k in picked]) + ")" if picked else f'"{carrera}"'
 
-    return (
-        f'{base} '
-        f'{carrera_part} '
-        f'(UDLA OR "Universidad de Las Américas") '
-        f'(Ecuador OR Quito OR Guayaquil OR Cuenca OR Ambato OR Manta)'
-    )
+    return f"{base} {carrera_part} {udla_ec}"
 
 
 # -------------------------- Excel helpers --------------------------
@@ -169,7 +146,8 @@ def ensure_columns(df: pd.DataFrame) -> pd.DataFrame:
         if col not in df.columns:
             df[col] = default
 
-    for col in ["LinkedIn", "Confianza", "Estudia_o_Estudio", "Candidatos_Top3", "Match_UDLA", "Match_Carrera"]:
+    for col in ["LinkedIn", "Confianza", "Estudia_o_Estudio",
+                "Candidatos_Top3", "Match_UDLA", "Match_Carrera"]:
         df[col] = df[col].astype("string")
 
     df["Score"] = pd.to_numeric(df["Score"], errors="coerce").fillna(0).astype(int)
@@ -183,28 +161,14 @@ def is_already_filled(v: str) -> bool:
 
 # -------------------------- Procesamiento fila --------------------------
 
-def process_row(estudiante: str, carrera: str, key_manager, cache: dict, expected_country: str = EXPECTED_COUNTRY):
-    """
-    Adaptado al NUEVO scoring:
+def process_row(estudiante: str, carrera: str, key_manager, cache: dict):
 
-    - score_candidate ya contiene gates estrictos:
-      * perfil real
-      * apellido en slug
-      * al menos 1 nombre
-      * Ecuador (según expected_country)
-      * UDLA obligatorio
-
-    - Guardamos TOP3 por SCORE.
-    - Elegimos BEST por (name_closeness, score) para evitar falsos positivos.
-    """
     try:
         variants = mejores_variantes_para_query(estudiante)
         if not variants:
             return empty_result()
 
-        # scored_all items:
-        # (score, name_close, item, flags)
-        scored_all: list[tuple[int, int, dict, dict]] = []
+        scored_all = []
 
         def fetch_query(q: str, count: int):
             ck = f"{count}::{q}"
@@ -222,47 +186,51 @@ def process_row(estudiante: str, carrera: str, key_manager, cache: dict, expecte
             return results
 
         def evaluate(results):
-            profiles = [it for it in results if is_profile_url(it.get("url", ""))]
-            if not profiles:
-                return
+            nonlocal scored_all
 
-            for it in profiles[:50]:
-                s, flags, _ = score_candidate(
-                    carrera,
-                    estudiante,
-                    it,
-                    expected_country=expected_country
-                )
+            for it in results:
+                if not is_profile_url(it.get("url", "")):
+                    continue
+
+                s, flags, _ = score_candidate(carrera, estudiante, it)
                 s = int(s)
 
-                # gates estrictos => s>0 significa que pasó validación
                 if s <= 0:
                     continue
 
                 nc = name_closeness_for_item(estudiante, it)
                 scored_all.append((s, nc, it, flags))
 
-        # 2 fases por variante:
-        # - "name_ec" trae candidatos por nombre+geo (rápido)
-        # - "strict" valida con carrera + UDLA + geo
-        for v in variants:
-            q1 = build_query(v, carrera, mode="name_ec")
-            evaluate(fetch_query(q1, count=20))
+                # 🔥 Early stop si encontramos score muy alto
+                if s >= EARLY_STOP_SCORE:
+                    return True
 
+            return False
+
+        for v in variants:
+
+            # Fase 1 (rápida)
+            q1 = build_query(v, carrera, mode="name_udlaec")
+            stop = evaluate(fetch_query(q1, 15))
+            if stop:
+                break
+
+            # Fase 2 (estricta)
             q2 = build_query(v, carrera, mode="strict", max_terms=4)
-            evaluate(fetch_query(q2, count=10))
+            stop = evaluate(fetch_query(q2, 10))
+            if stop:
+                break
 
         if not scored_all:
             return empty_result()
 
-        # TOP3 por SCORE (auditoría)
+        # TOP3 por score
         top3_by_score = sorted(scored_all, key=lambda x: x[0], reverse=True)[:3]
 
-        # BEST REAL por CLOSENESS y SCORE
+        # BEST por closeness + score
         best = sorted(scored_all, key=lambda x: (x[1], x[0]), reverse=True)[0]
-        best_score, best_nc, best_item, best_flags = best
+        best_score, _, best_item, best_flags = best
 
-        # Confianza (puedes endurecer umbrales si deseas)
         if best_score >= 85:
             conf = "ALTA"
         elif best_score >= 65:
@@ -289,12 +257,13 @@ def empty_result():
     }
 
 
-def build_output(best_score: int, best_item: dict, best_flags: dict, top3_by_score, conf: str):
-    # top3_by_score: (score, name_close, item, flags)
+def build_output(best_score, best_item, best_flags, top3_by_score, conf):
+
     top3 = " ; ".join([f"{x[2].get('url','')}|{x[0]}" for x in top3_by_score])
 
     study = infer_study_status(
-        (best_item.get("title", "") or "") + " " + (best_item.get("snippet", "") or "")
+        (best_item.get("title", "") or "") + " " +
+        (best_item.get("snippet", "") or "")
     )
 
     return {
@@ -308,9 +277,10 @@ def build_output(best_score: int, best_item: dict, best_flags: dict, top3_by_sco
     }
 
 
-# -------------------------- Lotes con guardado incremental --------------------------
+# -------------------------- Lotes --------------------------
 
 def run_lote(input_xlsx, output_xlsx, key_manager, cache, cache_path):
+
     if Path(output_xlsx).exists():
         print("Reanudando desde archivo existente...")
         df = pd.read_excel(output_xlsx)
@@ -322,48 +292,39 @@ def run_lote(input_xlsx, output_xlsx, key_manager, cache, cache_path):
     df = ensure_columns(df)
 
     for i, row in df.iterrows():
-        try:
-            linkedin_val = safe_str(row.get("LinkedIn"))
-            score_val = int(row.get("Score") or 0)
-            conf_val = safe_str(row.get("Confianza"))
 
-            # Saltar si ya está finalizado (URL + score + confianza)
-            if is_already_filled(linkedin_val) and score_val > 0 and conf_val:
-                continue
+        linkedin_val = safe_str(row.get("LinkedIn"))
+        score_val = int(row.get("Score") or 0)
+        conf_val = safe_str(row.get("Confianza"))
 
-            # No reintentar SR si RETRY_SR=False
-            if (not RETRY_SR) and (linkedin_val == "SR"):
-                continue
+        if is_already_filled(linkedin_val) and score_val > 0 and conf_val:
+            continue
 
-            estudiante = safe_str(row.get("Estudiante"))
-            carrera = safe_str(row.get("Carrera"))
+        if (not RETRY_SR) and (linkedin_val == "SR"):
+            continue
 
-            if not estudiante or not carrera:
-                continue
+        estudiante = safe_str(row.get("Estudiante"))
+        carrera = safe_str(row.get("Carrera"))
 
-            out = process_row(estudiante, carrera, key_manager, cache, expected_country=EXPECTED_COUNTRY)
+        if not estudiante or not carrera:
+            continue
 
-            df.at[i, "LinkedIn"] = out["best_url"] if out["best_url"] else "SR"
-            df.at[i, "Score"] = int(out["score"])
-            df.at[i, "Confianza"] = str(out["conf"])
-            df.at[i, "Estudia_o_Estudio"] = str(out["study"])
-            df.at[i, "Candidatos_Top3"] = str(out["top3"])
-            df.at[i, "Match_UDLA"] = str(out["match_udla"])
-            df.at[i, "Match_Carrera"] = str(out["match_carrera"])
+        out = process_row(estudiante, carrera, key_manager, cache)
 
-            if (i + 1) % SAVE_EVERY == 0:
-                print(f"💾 Guardando progreso en fila {i+1}")
-                df.to_excel(output_xlsx, index=False)
-                save_cache(cache, cache_path)
+        df.at[i, "LinkedIn"] = out["best_url"] if out["best_url"] else "SR"
+        df.at[i, "Score"] = out["score"]
+        df.at[i, "Confianza"] = out["conf"]
+        df.at[i, "Estudia_o_Estudio"] = out["study"]
+        df.at[i, "Candidatos_Top3"] = out["top3"]
+        df.at[i, "Match_UDLA"] = out["match_udla"]
+        df.at[i, "Match_Carrera"] = out["match_carrera"]
 
-            time.sleep(DELAY_ROW)
-
-        except Exception:
-            traceback.print_exc()
-            print("⚠ Error detectado. Guardando progreso...")
+        if (i + 1) % SAVE_EVERY == 0:
+            print(f"💾 Guardando progreso en fila {i+1}")
             df.to_excel(output_xlsx, index=False)
             save_cache(cache, cache_path)
-            continue
+
+        time.sleep(DELAY_ROW)
 
     df.to_excel(output_xlsx, index=False)
     save_cache(cache, cache_path)

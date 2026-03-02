@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from utils.text_norm import norm, simple_tokens, token_set, contains_any_smart
+from utils.text_norm import norm, simple_tokens, token_set
 from utils.carreras_synonyms import expand_carrera_keywords, is_generic_kw
 
 
@@ -26,16 +26,9 @@ def extract_slug(url: str) -> str:
         return ""
 
 
-def country_hint_from_url(url: str) -> str:
-    u = (url or "").lower()
-    if "://ec.linkedin.com" in u:
-        return "ec"
-    return ""
-
-
 # -------------------------------------------------
 # DATASET PARSING
-# Formato: APELLIDO1 APELLIDO2 NOMBRE1 NOMBRE2
+# APELLIDO1 APELLIDO2 NOMBRE1 NOMBRE2
 # -------------------------------------------------
 
 CONNECTORS = {"de", "del", "la", "las", "los", "y", "san", "santa", "da", "do", "dos", "von", "van"}
@@ -101,7 +94,7 @@ def slug_gating_pass(estudiante: str, url: str, title_snippet_text: str):
         ap_ok = True
 
     if not ap_ok:
-        return False, {"reason": "no_apellido_slug", "slug": slug}
+        return False
 
     # Al menos un nombre obligatorio
     nombre_ok = False
@@ -111,48 +104,36 @@ def slug_gating_pass(estudiante: str, url: str, title_snippet_text: str):
             break
 
     if not nombre_ok:
-        return False, {"reason": "no_nombre", "slug": slug}
+        return False
 
-    sim = fuzzy_ratio(estudiante, f"{slug} {title_snippet_text}")
-
-    return True, {"slug": slug, "sim": sim}
+    return True
 
 
 # -------------------------------------------------
-# NAME CLOSENESS (para elegir mejor del TOP)
+# VALIDACIÓN UDLA (EC) OBLIGATORIA
 # -------------------------------------------------
 
-def name_closeness_for_item(estudiante: str, item: dict) -> int:
-    url = item.get("url", "") or ""
-    title = item.get("title", "") or ""
-    snippet = item.get("snippet", "") or ""
+def udla_ec_required(text: str) -> bool:
+    """
+    Debe mencionar explícitamente:
+    - (EC)
+    Y estar asociado a:
+    - UDLA
+    - Universidad de las Américas
+    """
 
-    slug = extract_slug(url)
-    st = token_set(slug)
-    tt = token_set(f"{title} {snippet}")
+    t = norm(text)
 
-    nombres, ap1, ap2 = split_nombre_dataset(estudiante)
-    expected = set([x for x in [ap1, ap2] if x] + nombres)
+    if "(ec)" not in t:
+        return False
 
-    score = 0
+    if "udla" in t:
+        return True
 
-    if ap1 and ap1 in st:
-        score += 60
-    if ap2 and ap2 in st:
-        score += 45
+    if "universidad de las americas" in t:
+        return True
 
-    for n in nombres:
-        if n in st or n in tt:
-            score += 18 if n not in COMMON_GIVEN else 6
-        else:
-            score -= 10
-
-    extras = [x for x in st if x.isalpha() and len(x) >= 3 and x not in expected]
-    score -= min(25, len(extras) * 3)
-
-    score += int(fuzzy_ratio(estudiante, f"{slug} {title}") * 0.1)
-
-    return score
+    return False
 
 
 # -------------------------------------------------
@@ -193,7 +174,7 @@ def career_score(text: str, carrera: str) -> int:
 
 
 # -------------------------------------------------
-# Estudio status (AGREGADO para evitar ImportError)
+# Estudio status
 # -------------------------------------------------
 
 def infer_study_status(text: str) -> str:
@@ -220,69 +201,90 @@ def infer_study_status(text: str) -> str:
 
 
 # -------------------------------------------------
+# NUEVA FUNCIÓN AGREGADA (NO BORRA NADA)
+# -------------------------------------------------
+
+def name_closeness_for_item(estudiante: str, item: dict) -> int:
+    """
+    Métrica comparativa para desempatar candidatos válidos.
+    NO es un gate, solo sirve para elegir el mejor del TOP.
+    """
+
+    url = item.get("url", "") or ""
+    title = item.get("title", "") or ""
+    snippet = item.get("snippet", "") or ""
+
+    slug = extract_slug(url)
+    slug_tokens = token_set(slug)
+    txt_tokens = token_set(f"{title} {snippet}")
+
+    nombres, ap1, ap2 = split_nombre_dataset(estudiante)
+
+    score = 0
+
+    # Apellidos pesan fuerte
+    if ap1 and ap1 in slug_tokens:
+        score += 60
+    if ap2 and ap2 in slug_tokens:
+        score += 45
+
+    # Nombres
+    for n in nombres:
+        if n in slug_tokens or n in txt_tokens:
+            score += 18 if n not in COMMON_GIVEN else 6
+        else:
+            score -= 8
+
+    # Pequeño ajuste fuzzy
+    score += int(fuzzy_ratio(estudiante, f"{slug} {title}") * 0.1)
+
+    return score
+
+
+# -------------------------------------------------
 # MAIN SCORING
 # -------------------------------------------------
 
-def score_candidate(carrera: str, estudiante: str, item: dict, expected_country: str = "ec"):
+def score_candidate(carrera: str, estudiante: str, item: dict):
 
     url = item.get("url", "") or ""
     title = item.get("title", "") or ""
     snippet = item.get("snippet", "") or ""
 
     if not is_profile_url(url):
-        return 0, {"udla": False, "carrera": False, "nombre": False}, {"penal": -999}
+        return 0, {"udla": False, "carrera": False, "nombre": False}, {}
 
     slug = extract_slug(url)
     text = f"{title} {snippet} {slug}"
     t = norm(text)
 
-    reasons = {"udla": 0, "carrera": 0, "nombre": 0, "pais": 0}
-
     # SLUG GATING
-    passed, _ = slug_gating_pass(estudiante, url, f"{title} {snippet}")
-    if not passed:
-        return 0, {"udla": False, "carrera": False, "nombre": False}, {"penal": -999}
+    if not slug_gating_pass(estudiante, url, f"{title} {snippet}"):
+        return 0, {"udla": False, "carrera": False, "nombre": False}, {}
 
-    # Ecuador obligatorio
-    if expected_country == "ec":
-        ecuador_terms = ["ecuador", "quito", "guayaquil", "cuenca"]
-        url_country = country_hint_from_url(url)
-
-        if url_country != "ec" and not contains_any_smart(t, ecuador_terms):
-            return 0, {"udla": False, "carrera": False, "nombre": True}, {"penal": -999}
-
-    # UDLA obligatorio
-    udla_terms = ["udla", "universidad de las americas", "universidad de las américas"]
-
-    if not contains_any_smart(t, udla_terms):
-        return 0, {"udla": False, "carrera": False, "nombre": True}, {"penal": -999}
+    # UDLA (EC) OBLIGATORIO
+    if not udla_ec_required(t):
+        return 0, {"udla": False, "carrera": False, "nombre": True}, {}
 
     # SCORING
-    score = 50  # UDLA base
-    reasons["udla"] += 50
+    score = 60
 
     cs = career_score(t, carrera)
     score += cs
-    reasons["carrera"] += cs
 
     nombres, ap1, ap2 = split_nombre_dataset(estudiante)
 
     slug_tokens = token_set(slug)
     txt_tokens = token_set(t)
 
-    name_score = 0
-
     if ap1 and ap1 in slug_tokens:
-        name_score += 40
+        score += 30
     if ap2 and ap2 in slug_tokens:
-        name_score += 30
+        score += 20
 
     for n in nombres:
         if n in slug_tokens or n in txt_tokens:
-            name_score += 15
-
-    score += name_score
-    reasons["nombre"] += name_score
+            score += 10
 
     sim2 = fuzzy_ratio(estudiante, f"{slug} {title}")
     if sim2 >= 92:
@@ -292,8 +294,8 @@ def score_candidate(carrera: str, estudiante: str, item: dict, expected_country:
 
     flags = {
         "udla": True,
-        "carrera": reasons["carrera"] > 0,
-        "nombre": reasons["nombre"] > 0
+        "carrera": cs > 0,
+        "nombre": True
     }
 
-    return score, flags, reasons
+    return score, flags, {}
