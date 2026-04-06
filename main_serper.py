@@ -27,7 +27,7 @@ DELAY_API_MAX = 2.5
 DELAY_ROW = 0.8
 SAVE_EVERY = 10
 
-RETRY_SR = False
+RETRY_SR = False ##True para poder reintentar aquellos amrcados como no encontrados
 
 # Si encontramos score >= este valor → cortamos búsqueda
 EARLY_STOP_SCORE = 92
