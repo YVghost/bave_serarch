@@ -82,6 +82,7 @@ def ensure_columns(df: pd.DataFrame) -> pd.DataFrame:
         "Candidatos_Top3": "",
         "Match_UDLA": "",
         "Match_Carrera": "",
+        "Match_Anio": "",
     }
     for col, default in extras.items():
         if col not in df.columns:
@@ -107,12 +108,17 @@ def process_row(
     thr_accept: int = 85,
     thr_try_more: int = 65,
     thr_run_q2: int = 75,            # SOLO correr q2 si q1 no alcanzó este score
+    anio_graduacion=None,
 ) -> dict:
+    def _fmt_anio(flags: dict) -> str:
+        v = flags.get("anio")
+        return v if v else "SIN INFO"
+
     variants = variantes_nombres(estudiante, max_variantes=3)
     if not variants:
         return {
             "best_url": "", "score": 0, "conf": "NO_ENCONTRADO", "study": "NO DETERMINADO",
-            "top3": "", "match_udla": "", "match_carrera": ""
+            "top3": "", "match_udla": "", "match_carrera": "", "match_anio": "",
         }
 
     best = None  # (score, item, flags)
@@ -143,7 +149,7 @@ def process_row(
             return None
 
         for it in profiles[:max_candidates]:
-            s, flags, _reasons = score_candidate(carrera, estudiante, it)
+            s, flags, _reasons = score_candidate(carrera, estudiante, it, anio_graduacion)
             scored_all.append((s, it, flags))
 
             if best is None or s > best[0]:
@@ -162,6 +168,7 @@ def process_row(
                     "top3": top3,
                     "match_udla": "SI",
                     "match_carrera": "SI",
+                    "match_anio": _fmt_anio(flags),
                 }
 
         return None
@@ -182,13 +189,14 @@ def process_row(
         top3 = " ; ".join([f"{x[1].get('url','')}|{x[0]}" for x in scored_all[:3]])
         study = infer_study_status((best_item.get("title", "") or "") + " " + (best_item.get("snippet", "") or ""))
         return {
-            "best_url": "",
+            "best_url": best_item.get("url", ""),
             "score": int(best_s),
             "conf": "REVISAR",
             "study": study,
             "top3": top3,
             "match_udla": "SI" if best_flags.get("udla") else "NO/DUDOSO",
             "match_carrera": "SI" if best_flags.get("carrera") else "NO/DUDOSO",
+            "match_anio": _fmt_anio(best_flags),
         }
 
     # ---------------- FASE 2: variante 1, q2 (solo si hizo falta) ----------------
@@ -205,13 +213,14 @@ def process_row(
         top3 = " ; ".join([f"{x[1].get('url','')}|{x[0]}" for x in scored_all[:3]])
         study = infer_study_status((best_item.get("title", "") or "") + " " + (best_item.get("snippet", "") or ""))
         return {
-            "best_url": "",
+            "best_url": best_item.get("url", ""),
             "score": int(best_s),
             "conf": "REVISAR",
             "study": study,
             "top3": top3,
             "match_udla": "SI" if best_flags.get("udla") else "NO/DUDOSO",
             "match_carrera": "SI" if best_flags.get("carrera") else "NO/DUDOSO",
+            "match_anio": _fmt_anio(best_flags),
         }
 
     # ---------------- FASE 3: variantes 2/3 SOLO si sigue muy bajo ----------------
@@ -237,7 +246,7 @@ def process_row(
     if not best:
         return {
             "best_url": "", "score": 0, "conf": "NO_ENCONTRADO", "study": "NO DETERMINADO",
-            "top3": "", "match_udla": "", "match_carrera": ""
+            "top3": "", "match_udla": "", "match_carrera": "", "match_anio": "",
         }
 
     best_s, best_item, best_flags = best
@@ -248,7 +257,7 @@ def process_row(
     if best_s >= thr_accept and best_flags.get("udla") and best_flags.get("carrera"):
         conf, best_url = "ALTA", best_item.get("url", "")
     elif best_s >= thr_try_more:
-        conf, best_url = "REVISAR", ""
+        conf, best_url = "REVISAR", best_item.get("url", "")
     else:
         conf, best_url = "BAJA", ""
 
@@ -260,6 +269,7 @@ def process_row(
         "top3": top3,
         "match_udla": "SI" if best_flags.get("udla") else "NO/DUDOSO",
         "match_carrera": "SI" if best_flags.get("carrera") else "NO/DUDOSO",
+        "match_anio": _fmt_anio(best_flags),
     }
 
 
@@ -288,18 +298,23 @@ def run_lote(
         if not estudiante or not carrera:
             continue
 
+        anio_graduacion = (
+            str(row.get("anio_graduacion") or row.get("Anio_Graduacion") or row.get("año_graduacion") or "").strip()
+        )
+
         out = process_row(
             estudiante=estudiante,
             carrera=carrera,
             key_manager=key_manager,
             cache=cache,
-            base_sleep_s=base_sleep_s
+            base_sleep_s=base_sleep_s,
+            anio_graduacion=anio_graduacion or None,
         )
 
-        if out["conf"] == "ALTA" and out["best_url"]:
+        if out["best_url"]:
+            # ALTA y REVISAR muestran URL; BAJA/NO_ENCONTRADO quedan como SR
             df.at[i, "LinkedIn"] = out["best_url"]
         else:
-            # Marca SR para NO volver a gastar en reinicios
             df.at[i, "LinkedIn"] = "SR"
 
         df.at[i, "Score"] = out["score"]
@@ -308,6 +323,7 @@ def run_lote(
         df.at[i, "Candidatos_Top3"] = out["top3"]
         df.at[i, "Match_UDLA"] = out["match_udla"]
         df.at[i, "Match_Carrera"] = out["match_carrera"]
+        df.at[i, "Match_Anio"] = out["match_anio"]
 
         if (i + 1) % 50 == 0:
             save_cache(cache, cache_path)

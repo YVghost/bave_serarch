@@ -1,7 +1,49 @@
 from __future__ import annotations
 
+import re
+
 from utils.text_norm import norm, simple_tokens, token_set
 from utils.carreras_synonyms import expand_carrera_keywords, is_generic_kw
+from utils.nombres import unir_particulas_apellido
+
+
+# -------------------------------------------------
+# AÑO DE GRADUACIÓN
+# -------------------------------------------------
+
+_YEAR_RE = re.compile(r'\b(19[9]\d|20[0-3]\d)\b')
+
+
+def extract_years(text: str) -> set[int]:
+    """Extrae años plausibles (1990-2039) del texto del perfil."""
+    return {int(y) for y in _YEAR_RE.findall(norm(text))}
+
+
+def graduation_year_score(text: str, expected_year) -> tuple[int, str | None]:
+    """
+    Compara el año de graduación esperado con los años del perfil.
+
+    Returns (score_delta, status):
+      (0, None)       → sin expected_year o sin años en perfil → neutral
+      (+10, "MATCH")  → año coincide (tolerancia ±1)
+      (-20, "NO COINCIDE") → años encontrados pero ninguno coincide
+    """
+    if not expected_year:
+        return 0, None
+
+    try:
+        ey = int(str(expected_year).strip())
+    except (ValueError, TypeError):
+        return 0, None
+
+    years = extract_years(text)
+    if not years:
+        return 0, None  # no hay info de año en el perfil → neutral
+
+    if any(abs(y - ey) <= 1 for y in years):
+        return 10, "MATCH"
+
+    return -20, "NO COINCIDE"
 
 
 # -------------------------------------------------
@@ -17,7 +59,7 @@ def is_profile_url(url: str) -> bool:
 
 def extract_slug(url: str) -> str:
     try:
-        u = (url or "")
+        u = (url or "").split("?")[0]  # quitar query params (?trk=...)
         slug = u.split("/in/")[1]
         slug = slug.split("/")[0]
         slug = slug.replace("-", " ")
@@ -46,11 +88,23 @@ def split_nombre_dataset(nombre: str):
     if len(parts) < 3:
         return [], None, None
 
+    # Une partículas de apellidos compuestos: "de la Torre" → "de la torre" como unidad
+    parts = unir_particulas_apellido(parts)
+
     ap1 = parts[0]
-    ap2 = parts[1]
-    nombres = parts[2:]
+    ap2 = parts[1] if len(parts) >= 2 else ""
+    nombres = parts[2:] if len(parts) >= 3 else []
 
     return nombres, ap1, ap2
+
+
+def _ap_in_slug(ap: str, slug: str, slug_tokens: set) -> bool:
+    """Verifica si un apellido (simple o compuesto) está en el slug."""
+    if not ap:
+        return False
+    if " " in ap:  # apellido compuesto: buscar como frase exacta
+        return ap in slug
+    return ap in slug_tokens
 
 
 # -------------------------------------------------
@@ -86,12 +140,8 @@ def slug_gating_pass(estudiante: str, url: str, title_snippet_text: str):
 
     nombres, ap1, ap2 = split_nombre_dataset(estudiante)
 
-    # Apellido obligatorio en slug
-    ap_ok = False
-    if ap1 and ap1 in slug_tokens:
-        ap_ok = True
-    if ap2 and ap2 in slug_tokens:
-        ap_ok = True
+    # Apellido obligatorio en slug (soporta apellidos compuestos como "de la Torre")
+    ap_ok = _ap_in_slug(ap1, slug, slug_tokens) or _ap_in_slug(ap2, slug, slug_tokens)
 
     if not ap_ok:
         return False
@@ -222,10 +272,10 @@ def name_closeness_for_item(estudiante: str, item: dict) -> int:
 
     score = 0
 
-    # Apellidos pesan fuerte
-    if ap1 and ap1 in slug_tokens:
+    # Apellidos pesan fuerte (soporta apellidos compuestos)
+    if _ap_in_slug(ap1, slug, slug_tokens):
         score += 60
-    if ap2 and ap2 in slug_tokens:
+    if _ap_in_slug(ap2, slug, slug_tokens):
         score += 45
 
     # Nombres
@@ -245,14 +295,14 @@ def name_closeness_for_item(estudiante: str, item: dict) -> int:
 # MAIN SCORING
 # -------------------------------------------------
 
-def score_candidate(carrera: str, estudiante: str, item: dict):
+def score_candidate(carrera: str, estudiante: str, item: dict, anio_graduacion=None):
 
     url = item.get("url", "") or ""
     title = item.get("title", "") or ""
     snippet = item.get("snippet", "") or ""
 
     if not is_profile_url(url):
-        return 0, {"udla": False, "carrera": False, "nombre": False}, {}
+        return 0, {"udla": False, "carrera": False, "nombre": False, "anio": None}, {}
 
     slug = extract_slug(url)
     text = f"{title} {snippet} {slug}"
@@ -260,11 +310,11 @@ def score_candidate(carrera: str, estudiante: str, item: dict):
 
     # SLUG GATING
     if not slug_gating_pass(estudiante, url, f"{title} {snippet}"):
-        return 0, {"udla": False, "carrera": False, "nombre": False}, {}
+        return 0, {"udla": False, "carrera": False, "nombre": False, "anio": None}, {}
 
     # UDLA (EC) OBLIGATORIO
     if not udla_ec_required(t):
-        return 0, {"udla": False, "carrera": False, "nombre": True}, {}
+        return 0, {"udla": False, "carrera": False, "nombre": True, "anio": None}, {}
 
     # SCORING
     score = 60
@@ -277,9 +327,9 @@ def score_candidate(carrera: str, estudiante: str, item: dict):
     slug_tokens = token_set(slug)
     txt_tokens = token_set(t)
 
-    if ap1 and ap1 in slug_tokens:
+    if _ap_in_slug(ap1, slug, slug_tokens):
         score += 30
-    if ap2 and ap2 in slug_tokens:
+    if _ap_in_slug(ap2, slug, slug_tokens):
         score += 20
 
     for n in nombres:
@@ -290,12 +340,17 @@ def score_candidate(carrera: str, estudiante: str, item: dict):
     if sim2 >= 92:
         score += 10
 
+    # AÑO DE GRADUACIÓN: bonus si coincide, penalización si hay años pero no coinciden
+    anio_delta, anio_status = graduation_year_score(t, anio_graduacion)
+    score += anio_delta
+
     score = max(0, min(100, score))
 
     flags = {
         "udla": True,
         "carrera": cs > 0,
-        "nombre": True
+        "nombre": True,
+        "anio": anio_status,  # "MATCH", "NO COINCIDE", o None (sin info)
     }
 
     return score, flags, {}

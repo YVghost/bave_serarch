@@ -17,6 +17,7 @@ from utils.scoring import (
     name_closeness_for_item,
 )
 from utils.carreras_synonyms import expand_carrera_keywords
+from utils.nombres import variantes_nombres
 
 
 # -------------------------- CONFIG --------------------------
@@ -140,6 +141,7 @@ def ensure_columns(df: pd.DataFrame) -> pd.DataFrame:
         "Candidatos_Top3": "",
         "Match_UDLA": "",
         "Match_Carrera": "",
+        "Match_Anio": "",
     }
 
     for col, default in required.items():
@@ -147,7 +149,7 @@ def ensure_columns(df: pd.DataFrame) -> pd.DataFrame:
             df[col] = default
 
     for col in ["LinkedIn", "Confianza", "Estudia_o_Estudio",
-                "Candidatos_Top3", "Match_UDLA", "Match_Carrera"]:
+                "Candidatos_Top3", "Match_UDLA", "Match_Carrera", "Match_Anio"]:
         df[col] = df[col].astype("string")
 
     df["Score"] = pd.to_numeric(df["Score"], errors="coerce").fillna(0).astype(int)
@@ -161,10 +163,10 @@ def is_already_filled(v: str) -> bool:
 
 # -------------------------- Procesamiento fila --------------------------
 
-def process_row(estudiante: str, carrera: str, key_manager, cache: dict):
+def process_row(estudiante: str, carrera: str, key_manager, cache: dict, anio_graduacion=None):
 
     try:
-        variants = mejores_variantes_para_query(estudiante)
+        variants = variantes_nombres(estudiante, max_variantes=3)
         if not variants:
             return empty_result()
 
@@ -192,7 +194,7 @@ def process_row(estudiante: str, carrera: str, key_manager, cache: dict):
                 if not is_profile_url(it.get("url", "")):
                     continue
 
-                s, flags, _ = score_candidate(carrera, estudiante, it)
+                s, flags, _ = score_candidate(carrera, estudiante, it, anio_graduacion)
                 s = int(s)
 
                 if s <= 0:
@@ -231,7 +233,8 @@ def process_row(estudiante: str, carrera: str, key_manager, cache: dict):
         best = sorted(scored_all, key=lambda x: (x[1], x[0]), reverse=True)[0]
         best_score, _, best_item, best_flags = best
 
-        if best_score >= 85:
+        # Carrera Y UDLA son obligatorios para ALTA (igual que main_brave.py)
+        if best_score >= 85 and best_flags.get("carrera") and best_flags.get("udla"):
             conf = "ALTA"
         elif best_score >= 65:
             conf = "REVISAR"
@@ -254,6 +257,7 @@ def empty_result():
         "top3": "",
         "match_udla": "",
         "match_carrera": "",
+        "match_anio": "",
     }
 
 
@@ -266,14 +270,21 @@ def build_output(best_score, best_item, best_flags, top3_by_score, conf):
         (best_item.get("snippet", "") or "")
     )
 
+    # ALTA y REVISAR muestran la URL para revisión manual; BAJA queda vacía
+    best_url = (best_item.get("url", "") or "") if conf in ("ALTA", "REVISAR") else ""
+
+    anio_status = best_flags.get("anio")  # "MATCH", "NO COINCIDE", o None
+    match_anio = anio_status if anio_status else "SIN INFO"
+
     return {
-        "best_url": best_item.get("url", "") or "",
+        "best_url": best_url,
         "score": int(best_score),
         "conf": conf,
         "study": study,
         "top3": top3,
         "match_udla": "SI" if best_flags.get("udla") else "NO/DUDOSO",
         "match_carrera": "SI" if best_flags.get("carrera") else "NO/DUDOSO",
+        "match_anio": match_anio,
     }
 
 
@@ -290,6 +301,16 @@ def run_lote(input_xlsx, output_xlsx, key_manager, cache, cache_path):
         df.to_excel(output_xlsx, index=False)
 
     df = ensure_columns(df)
+
+    # Recolectar URLs ya asignadas para evitar asignar la misma URL a dos personas
+    def _norm_url(u: str) -> str:
+        return (u or "").split("?")[0].rstrip("/").lower()
+
+    assigned_urls: set[str] = set()
+    for _, row in df.iterrows():
+        v = safe_str(row.get("LinkedIn"))
+        if is_already_filled(v):
+            assigned_urls.add(_norm_url(v))
 
     for i, row in df.iterrows():
 
@@ -309,7 +330,23 @@ def run_lote(input_xlsx, output_xlsx, key_manager, cache, cache_path):
         if not estudiante or not carrera:
             continue
 
-        out = process_row(estudiante, carrera, key_manager, cache)
+        # Leer año de graduación (acepta distintas variantes de nombre de columna)
+        anio_graduacion = (
+            safe_str(row.get("anio_graduacion"))
+            or safe_str(row.get("Anio_Graduacion"))
+            or safe_str(row.get("año_graduacion"))
+        )
+
+        out = process_row(estudiante, carrera, key_manager, cache, anio_graduacion)
+
+        # Si la URL ya fue asignada a otra persona en este lote, no reutilizar
+        url_norm = _norm_url(out["best_url"])
+        if out["best_url"] and url_norm in assigned_urls:
+            out["best_url"] = ""
+            out["conf"] = "REVISAR"
+
+        if out["best_url"]:
+            assigned_urls.add(url_norm)
 
         df.at[i, "LinkedIn"] = out["best_url"] if out["best_url"] else "SR"
         df.at[i, "Score"] = out["score"]
@@ -318,6 +355,7 @@ def run_lote(input_xlsx, output_xlsx, key_manager, cache, cache_path):
         df.at[i, "Candidatos_Top3"] = out["top3"]
         df.at[i, "Match_UDLA"] = out["match_udla"]
         df.at[i, "Match_Carrera"] = out["match_carrera"]
+        df.at[i, "Match_Anio"] = out["match_anio"]
 
         if (i + 1) % SAVE_EVERY == 0:
             print(f"💾 Guardando progreso en fila {i+1}")
