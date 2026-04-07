@@ -70,7 +70,8 @@ def extract_slug(url: str) -> str:
 
 # -------------------------------------------------
 # DATASET PARSING
-# APELLIDO1 APELLIDO2 NOMBRE1 NOMBRE2
+# EC: APELLIDO1 APELLIDO2 NOMBRE1 NOMBRE2
+# CR: NOMBRE1 NOMBRE2 APELLIDO1 APELLIDO2
 # -------------------------------------------------
 
 CONNECTORS = {"de", "del", "la", "las", "los", "y", "san", "santa", "da", "do", "dos", "von", "van"}
@@ -84,11 +85,11 @@ COMMON_GIVEN = {
 
 
 def split_nombre_dataset(nombre: str):
+    """Formato EC: Ap1 Ap2 N1 N2"""
     parts = [p for p in norm(nombre).split() if len(p) >= 2]
     if len(parts) < 3:
         return [], None, None
 
-    # Une partículas de apellidos compuestos: "de la Torre" → "de la torre" como unidad
     parts = unir_particulas_apellido(parts)
 
     ap1 = parts[0]
@@ -96,6 +97,32 @@ def split_nombre_dataset(nombre: str):
     nombres = parts[2:] if len(parts) >= 3 else []
 
     return nombres, ap1, ap2
+
+
+def split_nombre_cr(nombre: str):
+    """
+    Formato CR: N1 [N2] Ap1 [Ap2]
+    Los apellidos son los últimos 2 tokens; los nombres, los anteriores.
+    """
+    parts = [p for p in norm(nombre).split() if len(p) >= 2]
+    if len(parts) < 2:
+        return [], None, None
+
+    if len(parts) == 2:
+        return [parts[0]], parts[1], ""
+
+    ap2 = parts[-1]
+    ap1 = parts[-2]
+    nombres = parts[:-2]
+
+    return nombres, ap1, ap2
+
+
+def split_by_pais(nombre: str, pais: str = "EC"):
+    """Despachador: elige el parser correcto según el país."""
+    if pais == "CR":
+        return split_nombre_cr(nombre)
+    return split_nombre_dataset(nombre)
 
 
 def _ap_in_slug(ap: str, slug: str, slug_tokens: set) -> bool:
@@ -132,31 +159,38 @@ def fuzzy_ratio(a: str, b: str) -> int:
 # SLUG GATING ESTRICTO
 # -------------------------------------------------
 
-def slug_gating_pass(estudiante: str, url: str, title_snippet_text: str):
-
+def slug_gating_pass(estudiante: str, url: str, title_snippet_text: str, pais: str = "EC"):
+    """
+    EC: apellido en slug (ap1 o ap2) + nombre en slug o texto.
+    CR: ap1 Y ap2 ambos en slug + al menos un nombre en el slug.
+        Si ap2 vacío o muy corto, basta ap1 en slug + nombre en slug.
+    """
     slug = extract_slug(url)
     slug_tokens = token_set(slug)
     txt_tokens = token_set(title_snippet_text)
 
-    nombres, ap1, ap2 = split_nombre_dataset(estudiante)
+    nombres, ap1, ap2 = split_by_pais(estudiante, pais)
 
-    # Apellido obligatorio en slug (soporta apellidos compuestos como "de la Torre")
+    if pais == "CR":
+        # Ap1 obligatorio en slug siempre
+        if not _ap_in_slug(ap1, slug, slug_tokens):
+            return False
+
+        # Si ap2 existe y tiene largo suficiente, también debe estar en slug
+        if ap2 and len(ap2) > 2:
+            if not _ap_in_slug(ap2, slug, slug_tokens):
+                return False
+
+        # Nombre obligatorio en slug (no solo en texto)
+        return any(n and n in slug_tokens for n in nombres)
+
+    # EC: comportamiento original
     ap_ok = _ap_in_slug(ap1, slug, slug_tokens) or _ap_in_slug(ap2, slug, slug_tokens)
-
     if not ap_ok:
         return False
 
-    # Al menos un nombre obligatorio
-    nombre_ok = False
-    for n in nombres:
-        if n and (n in slug_tokens or n in txt_tokens):
-            nombre_ok = True
-            break
-
-    if not nombre_ok:
-        return False
-
-    return True
+    nombre_ok = any(n and (n in slug_tokens or n in txt_tokens) for n in nombres)
+    return nombre_ok
 
 
 # -------------------------------------------------
@@ -164,28 +198,8 @@ def slug_gating_pass(estudiante: str, url: str, title_snippet_text: str):
 # -------------------------------------------------
 
 def udla_ec_required(text: str, pais: str = "EC", universidad: str = "") -> bool:
-    """
-    EC: valida que el texto contenga (EC) + UDLA / Universidad de las Américas.
-    CR: si se provee el nombre de la universidad, valida que aparezca en el texto.
-        Si no se provee, cae al mismo chequeo de tag (CR) + nombre.
-    """
-
-    t = norm(text)
-
-    if pais == "CR" and universidad:
-        return norm(universidad) in t
-
-    tag = f"({pais.lower()})"
-    if tag not in t:
-        return False
-
-    if "udla" in t:
-        return True
-
-    if "universidad de las americas" in t:
-        return True
-
-    return False
+    from utils.pais_config import validate_universidad
+    return validate_universidad(norm(text), pais, universidad)
 
 
 # -------------------------------------------------
@@ -256,7 +270,7 @@ def infer_study_status(text: str) -> str:
 # NUEVA FUNCIÓN AGREGADA (NO BORRA NADA)
 # -------------------------------------------------
 
-def name_closeness_for_item(estudiante: str, item: dict) -> int:
+def name_closeness_for_item(estudiante: str, item: dict, pais: str = "EC") -> int:
     """
     Métrica comparativa para desempatar candidatos válidos.
     NO es un gate, solo sirve para elegir el mejor del TOP.
@@ -270,7 +284,7 @@ def name_closeness_for_item(estudiante: str, item: dict) -> int:
     slug_tokens = token_set(slug)
     txt_tokens = token_set(f"{title} {snippet}")
 
-    nombres, ap1, ap2 = split_nombre_dataset(estudiante)
+    nombres, ap1, ap2 = split_by_pais(estudiante, pais)
 
     score = 0
 
@@ -310,8 +324,8 @@ def score_candidate(carrera: str, estudiante: str, item: dict, anio_graduacion=N
     text = f"{title} {snippet} {slug}"
     t = norm(text)
 
-    # SLUG GATING
-    if not slug_gating_pass(estudiante, url, f"{title} {snippet}"):
+    # SLUG GATING (más estricto para CR)
+    if not slug_gating_pass(estudiante, url, f"{title} {snippet}", pais=pais):
         return 0, {"udla": False, "carrera": False, "nombre": False, "anio": None}, {}
 
     # UDLA OBLIGATORIO (por país)
@@ -319,28 +333,55 @@ def score_candidate(carrera: str, estudiante: str, item: dict, anio_graduacion=N
         return 0, {"udla": False, "carrera": False, "nombre": True, "anio": None}, {}
 
     # SCORING
-    score = 60
-
-    cs = career_score(t, carrera)
-    score += cs
-
-    nombres, ap1, ap2 = split_nombre_dataset(estudiante)
-
+    nombres, ap1, ap2 = split_by_pais(estudiante, pais)
     slug_tokens = token_set(slug)
     txt_tokens = token_set(t)
 
-    if _ap_in_slug(ap1, slug, slug_tokens):
-        score += 30
-    if _ap_in_slug(ap2, slug, slug_tokens):
-        score += 20
+    ap1_in_slug = _ap_in_slug(ap1, slug, slug_tokens)
+    ap2_in_slug = _ap_in_slug(ap2, slug, slug_tokens)
 
-    for n in nombres:
-        if n in slug_tokens or n in txt_tokens:
+    if pais == "CR":
+        # CR: base más baja — necesita demostrar más coincidencias para llegar a REVISAR
+        score = 45
+
+        cs = career_score(t, carrera)
+        score += cs
+
+        # Apellidos en slug
+        if ap1_in_slug:
+            score += 25
+        if ap2_in_slug:
+            score += 20
+
+        # Nombres: solo cuentan si están en el slug (no en texto libre)
+        for n in nombres:
+            if n and n in slug_tokens:
+                score += 10
+
+        # Bonus fuzzy solo si es muy alto
+        sim2 = fuzzy_ratio(estudiante, f"{slug} {title}")
+        if sim2 >= 95:
             score += 10
 
-    sim2 = fuzzy_ratio(estudiante, f"{slug} {title}")
-    if sim2 >= 92:
-        score += 10
+    else:
+        # EC: comportamiento original
+        score = 60
+
+        cs = career_score(t, carrera)
+        score += cs
+
+        if ap1_in_slug:
+            score += 30
+        if ap2_in_slug:
+            score += 20
+
+        for n in nombres:
+            if n in slug_tokens or n in txt_tokens:
+                score += 10
+
+        sim2 = fuzzy_ratio(estudiante, f"{slug} {title}")
+        if sim2 >= 92:
+            score += 10
 
     # AÑO DE GRADUACIÓN: bonus si coincide, penalización si hay años pero no coinciden
     anio_delta, anio_status = graduation_year_score(t, anio_graduacion)
@@ -352,7 +393,7 @@ def score_candidate(carrera: str, estudiante: str, item: dict, anio_graduacion=N
         "udla": True,
         "carrera": cs > 0,
         "nombre": True,
-        "anio": anio_status,  # "MATCH", "NO COINCIDE", o None (sin info)
+        "anio": anio_status,
     }
 
     return score, flags, {}

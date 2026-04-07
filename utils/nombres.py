@@ -60,6 +60,67 @@ def detectar_nombre_compuesto(nombres: list[str]) -> list[str]:
     return nombres
 
 
+def variantes_nombres_cr(nombre_completo: str, max_variantes: int = 5) -> list[str]:
+    """
+    Variantes para formato Costa Rica: N1 [N2] Ap1 [Ap2]
+    Los apellidos vienen al FINAL, los nombres al inicio.
+
+    Casos según cantidad de tokens:
+      2 tokens (N1 Ap1)       → "N1 Ap1"
+      3 tokens — ambiguo —    → genera variantes para AMBAS lecturas:
+                                  [N1 Ap1 Ap2] y [N1 N2 Ap1]
+      4 tokens (N1 N2 Ap1 Ap2)→ variantes cruzadas completas
+      5+ tokens               → toma primeros 2 como nombres, últimos 2 como apellidos
+    """
+    parts = [p.strip() for p in str(nombre_completo or "").split() if p.strip()]
+    if not parts:
+        return []
+
+    candidatos = []
+
+    if len(parts) == 1:
+        return [parts[0]]
+
+    if len(parts) == 2:
+        # N1 Ap1
+        candidatos.append(f"{parts[0]} {parts[1]}")
+
+    elif len(parts) == 3:
+        # CR con 3 tokens: N1 Ap1 Ap2  (un nombre, dos apellidos)
+        n1, ap1, ap2 = parts[0], parts[1], parts[2]
+        candidatos.append(f"{n1} {ap1}")         # Patricia Cordero
+        candidatos.append(f"{n1} {ap2}")         # Patricia Quiros
+        candidatos.append(f"{n1} {ap1} {ap2}")  # Patricia Cordero Quiros
+
+    elif len(parts) == 4:
+        # N1 N2 Ap1 Ap2
+        n1, n2, ap1, ap2 = parts[0], parts[1], parts[2], parts[3]
+        candidatos.append(f"{n1} {ap1}")
+        candidatos.append(f"{n1} {ap1} {ap2}")
+        candidatos.append(f"{n2} {ap1}")
+        candidatos.append(f"{n1} {ap2}")
+        candidatos.append(f"{n2} {ap1} {ap2}")
+
+    else:
+        # 5+ tokens: primeros 2 = nombres, últimos 2 = apellidos
+        n1, n2 = parts[0], parts[1]
+        ap1, ap2 = parts[-2], parts[-1]
+        candidatos.append(f"{n1} {ap1}")
+        candidatos.append(f"{n1} {ap1} {ap2}")
+        candidatos.append(f"{n2} {ap1}")
+        candidatos.append(f"{n1} {ap2}")
+
+    out, seen = [], set()
+    for c in candidatos:
+        c = " ".join(c.split()).strip()
+        k = norm(c)
+        if c and k not in seen:
+            out.append(c)
+            seen.add(k)
+
+    return out[:max_variantes]
+
+
 def variantes_nombres(nombre_completo: str, max_variantes: int = 4) -> list[str]:
     """
     Variantes robustas:

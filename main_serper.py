@@ -16,8 +16,9 @@ from utils.scoring import (
     infer_study_status,
     name_closeness_for_item,
 )
-from utils.carreras_synonyms import expand_carrera_keywords
-from utils.nombres import variantes_nombres
+from utils.nombres import variantes_nombres, variantes_nombres_cr
+from utils.pais_config import build_query
+from utils.lotes import procesar_dividir
 
 
 # -------------------------- CONFIG --------------------------
@@ -27,7 +28,7 @@ DELAY_API_MAX = 2.5
 DELAY_ROW = 0.8
 SAVE_EVERY = 10
 
-RETRY_SR = False ##True para poder reintentar aquellos amrcados como no encontrados
+RETRY_SR = True ##True para poder reintentar aquellos amrcados como no encontrados
 
 # Si encontramos score >= este valor → cortamos búsqueda
 EARLY_STOP_SCORE = 92
@@ -99,71 +100,37 @@ def mejores_variantes_para_query(nombre_completo: str) -> list[str]:
     return out[:3]
 
 
-# -------------------------- Query builder --------------------------
-
-UDLA_TAGS = {
-    "EC": '("UDLA (EC)" OR "Universidad de Las Américas (EC)" OR "Universidad de las Américas (EC)")',
-    "CR": '("UDLA (CR)" OR "Universidad de Las Américas (CR)" OR "Universidad de las Américas (CR)")',
-}
-
-
-def build_query(nombre_var: str, carrera: str, mode: str, pais: str = "EC", universidad: str = "", max_terms: int = 4) -> str:
-
-    base = f'site:linkedin.com/in ("{nombre_var}")'
-
-    # Para CR con universidad específica, usar su nombre real en la query
-    if pais == "CR" and universidad:
-        univ_part = f'"{universidad}"'
-    else:
-        univ_part = UDLA_TAGS[pais]
-
-    if mode == "name_udlaec":
-        return f"{base} {univ_part}"
-
-    kws = expand_carrera_keywords(carrera) or []
-    picked, seen = [], set()
-
-    for k in kws:
-        k = (k or "").strip()
-        if not k:
-            continue
-        if k.lower() in seen:
-            continue
-        picked.append(k)
-        seen.add(k.lower())
-        if len(picked) >= max_terms:
-            break
-
-    carrera_part = "(" + " OR ".join([f'"{k}"' for k in picked]) + ")" if picked else f'"{carrera}"'
-
-    return f"{base} {carrera_part} {univ_part}"
-
-
 # -------------------------- Excel helpers --------------------------
 
-def ensure_columns(df: pd.DataFrame) -> pd.DataFrame:
-    required = {
-        "LinkedIn": "",
-        "Estudiante": "",
-        "Carrera": "",
-        "Score": 0,
-        "Confianza": "",
-        "Estudia_o_Estudio": "",
-        "Candidatos_Top3": "",
-        "Match_UDLA": "",
-        "Match_Carrera": "",
-        "Match_Anio": "",
-    }
+# Columnas de salida fijas
+_OUTPUT_COLS: dict[str, object] = {
+    "LinkedIn": "",
+    "Score": 0,
+    "Confianza": "",
+    "Estudia_o_Estudio": "",
+    "Candidatos_Top3": "",
+    "Match_UDLA": "",
+    "Match_Carrera": "",
+    "Match_Anio": "",
+}
 
-    for col, default in required.items():
+_OUTPUT_STR_COLS = [
+    "LinkedIn", "Confianza", "Estudia_o_Estudio",
+    "Candidatos_Top3", "Match_UDLA", "Match_Carrera", "Match_Anio",
+]
+
+
+def ensure_columns(df: pd.DataFrame) -> pd.DataFrame:
+    for col, default in _OUTPUT_COLS.items():
         if col not in df.columns:
             df[col] = default
-
-    for col in ["LinkedIn", "Confianza", "Estudia_o_Estudio",
-                "Candidatos_Top3", "Match_UDLA", "Match_Carrera", "Match_Anio"]:
+    for col in _OUTPUT_STR_COLS:
         df[col] = df[col].astype("string")
-
     df["Score"] = pd.to_numeric(df["Score"], errors="coerce").fillna(0).astype(int)
+    # Cedula y Carnet pueden venir como float64 al releer el output — forzar a string
+    for col in ("Cedula", "Carnet"):
+        if col in df.columns:
+            df[col] = df[col].astype("string")
     return df
 
 
@@ -172,12 +139,22 @@ def is_already_filled(v: str) -> bool:
     return v.startswith("http") and "linkedin.com" in v.lower()
 
 
+def resolve_col(row, *candidates: str) -> str:
+    """Retorna el valor del primer candidato de columna que exista y no esté vacío."""
+    for col in candidates:
+        val = safe_str(row.get(col))
+        if val:
+            return val
+    return ""
+
+
 # -------------------------- Procesamiento fila --------------------------
 
 def process_row(estudiante: str, carrera: str, key_manager, cache: dict, anio_graduacion=None, pais: str = "EC", universidad: str = ""):
 
     try:
-        variants = variantes_nombres(estudiante, max_variantes=3)
+        _gen = variantes_nombres_cr if pais == "CR" else variantes_nombres
+        variants = _gen(estudiante, max_variantes=3)
         if not variants:
             return empty_result()
 
@@ -211,7 +188,7 @@ def process_row(estudiante: str, carrera: str, key_manager, cache: dict, anio_gr
                 if s <= 0:
                     continue
 
-                nc = name_closeness_for_item(estudiante, it)
+                nc = name_closeness_for_item(estudiante, it, pais=pais)
                 scored_all.append((s, nc, it, flags))
 
                 # Early stop si encontramos score muy alto
@@ -244,10 +221,16 @@ def process_row(estudiante: str, carrera: str, key_manager, cache: dict, anio_gr
         best = sorted(scored_all, key=lambda x: (x[1], x[0]), reverse=True)[0]
         best_score, _, best_item, best_flags = best
 
-        # Carrera Y UDLA son obligatorios para ALTA (igual que main_brave.py)
-        if best_score >= 85 and best_flags.get("carrera") and best_flags.get("udla"):
+        # Umbrales de confianza por país
+        # CR es más estricto porque el gating de universidad es menos específico
+        if pais == "CR":
+            thr_alta, thr_revisar = 90, 75
+        else:
+            thr_alta, thr_revisar = 85, 65
+
+        if best_score >= thr_alta and best_flags.get("carrera") and best_flags.get("udla"):
             conf = "ALTA"
-        elif best_score >= 65:
+        elif best_score >= thr_revisar:
             conf = "REVISAR"
         else:
             conf = "BAJA"
@@ -335,21 +318,17 @@ def run_lote(input_xlsx, output_xlsx, key_manager, cache, cache_path, pais: str 
         if (not RETRY_SR) and (linkedin_val == "SR"):
             continue
 
-        estudiante = safe_str(row.get("Estudiante"))
-        carrera = safe_str(row.get("Carrera"))
+        # Nombre del estudiante: acepta columnas en minúsculas (CR) o title-case (EC)
+        estudiante = resolve_col(row, "nombre", "Estudiante", "NOMBRE")
+        carrera    = resolve_col(row, "carrera", "Carrera", "CARRERA")
 
         if not estudiante or not carrera:
             continue
 
-        # Leer año de graduación (acepta distintas variantes de nombre de columna)
-        anio_graduacion = (
-            safe_str(row.get("anio_graduacion"))
-            or safe_str(row.get("Anio_Graduacion"))
-            or safe_str(row.get("año_graduacion"))
-        )
+        anio_graduacion = resolve_col(row, "anio_graduacion", "Anio_Graduacion", "año_graduacion")
 
-        # Para CR: leer universidad específica del estudiante
-        universidad = safe_str(row.get("Universidad")) if pais == "CR" else "" #### cambiar para adapatar al campo leido
+        # Universidad: CR usa el campo del Excel; EC no lo necesita
+        universidad = resolve_col(row, "universidad", "Universidad") if pais == "CR" else ""
 
         out = process_row(estudiante, carrera, key_manager, cache, anio_graduacion, pais=pais, universidad=universidad)
 
@@ -370,6 +349,14 @@ def run_lote(input_xlsx, output_xlsx, key_manager, cache, cache_path, pais: str 
         df.at[i, "Match_UDLA"] = out["match_udla"]
         df.at[i, "Match_Carrera"] = out["match_carrera"]
         df.at[i, "Match_Anio"] = out["match_anio"]
+
+        # Cedula y Carnet: copiar desde el input si existen en cualquier variante de nombre
+        for dest, *srcs in [("Cedula", "cedula", "Cedula"), ("Carnet", "carnet", "Carnet")]:
+            val = resolve_col(row, *srcs)
+            if val:
+                if dest not in df.columns:
+                    df[dest] = pd.array([""] * len(df), dtype="string")
+                df.at[i, dest] = val
 
         if (i + 1) % SAVE_EVERY == 0:
             print(f"💾 Guardando progreso en fila {i+1}")
@@ -416,14 +403,20 @@ def main():
 
     key_manager = SerperKeyManager.from_env()
 
-    in_dir = Path(f"data/{carpeta}/lotes")
-    out_dir = Path(f"data/{carpeta}/output")
+    base_dir = f"data/{carpeta}"
+    in_dir   = Path(f"{base_dir}/lotes")
+    out_dir  = Path(f"{base_dir}/output")
     out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Dividir archivos nuevos en dividir/ → lotes/ antes de procesar
+    generados = procesar_dividir(base_dir)
+    if generados:
+        print(f"[dividir] {generados} lote(s) generado(s) desde carpeta 'dividir'")
 
     cache_path = f"cache/serper_cache_{pais.lower()}.json"
     cache = load_cache(cache_path)
 
-    lotes = sorted(in_dir.glob("estudiantes_lote_*.xlsx"))
+    lotes = sorted(in_dir.glob("*.xlsx"))
     if not lotes:
         raise RuntimeError(f"No se encontraron lotes en: {in_dir.resolve()}")
 
