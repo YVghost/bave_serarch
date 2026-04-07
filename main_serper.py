@@ -101,13 +101,24 @@ def mejores_variantes_para_query(nombre_completo: str) -> list[str]:
 
 # -------------------------- Query builder --------------------------
 
-def build_query(nombre_var: str, carrera: str, mode: str, max_terms: int = 4) -> str:
+UDLA_TAGS = {
+    "EC": '("UDLA (EC)" OR "Universidad de Las Américas (EC)" OR "Universidad de las Américas (EC)")',
+    "CR": '("UDLA (CR)" OR "Universidad de Las Américas (CR)" OR "Universidad de las Américas (CR)")',
+}
+
+
+def build_query(nombre_var: str, carrera: str, mode: str, pais: str = "EC", universidad: str = "", max_terms: int = 4) -> str:
 
     base = f'site:linkedin.com/in ("{nombre_var}")'
-    udla_ec = '("UDLA (EC)" OR "Universidad de Las Américas (EC)" OR "Universidad de las Américas (EC)")'
+
+    # Para CR con universidad específica, usar su nombre real en la query
+    if pais == "CR" and universidad:
+        univ_part = f'"{universidad}"'
+    else:
+        univ_part = UDLA_TAGS[pais]
 
     if mode == "name_udlaec":
-        return f"{base} {udla_ec}"
+        return f"{base} {univ_part}"
 
     kws = expand_carrera_keywords(carrera) or []
     picked, seen = [], set()
@@ -125,7 +136,7 @@ def build_query(nombre_var: str, carrera: str, mode: str, max_terms: int = 4) ->
 
     carrera_part = "(" + " OR ".join([f'"{k}"' for k in picked]) + ")" if picked else f'"{carrera}"'
 
-    return f"{base} {carrera_part} {udla_ec}"
+    return f"{base} {carrera_part} {univ_part}"
 
 
 # -------------------------- Excel helpers --------------------------
@@ -163,7 +174,7 @@ def is_already_filled(v: str) -> bool:
 
 # -------------------------- Procesamiento fila --------------------------
 
-def process_row(estudiante: str, carrera: str, key_manager, cache: dict, anio_graduacion=None):
+def process_row(estudiante: str, carrera: str, key_manager, cache: dict, anio_graduacion=None, pais: str = "EC", universidad: str = ""):
 
     try:
         variants = variantes_nombres(estudiante, max_variantes=3)
@@ -194,7 +205,7 @@ def process_row(estudiante: str, carrera: str, key_manager, cache: dict, anio_gr
                 if not is_profile_url(it.get("url", "")):
                     continue
 
-                s, flags, _ = score_candidate(carrera, estudiante, it, anio_graduacion)
+                s, flags, _ = score_candidate(carrera, estudiante, it, anio_graduacion, pais=pais, universidad=universidad)
                 s = int(s)
 
                 if s <= 0:
@@ -203,7 +214,7 @@ def process_row(estudiante: str, carrera: str, key_manager, cache: dict, anio_gr
                 nc = name_closeness_for_item(estudiante, it)
                 scored_all.append((s, nc, it, flags))
 
-                # 🔥 Early stop si encontramos score muy alto
+                # Early stop si encontramos score muy alto
                 if s >= EARLY_STOP_SCORE:
                     return True
 
@@ -212,13 +223,13 @@ def process_row(estudiante: str, carrera: str, key_manager, cache: dict, anio_gr
         for v in variants:
 
             # Fase 1 (rápida)
-            q1 = build_query(v, carrera, mode="name_udlaec")
+            q1 = build_query(v, carrera, mode="name_udlaec", pais=pais, universidad=universidad)
             stop = evaluate(fetch_query(q1, 15))
             if stop:
                 break
 
             # Fase 2 (estricta)
-            q2 = build_query(v, carrera, mode="strict", max_terms=4)
+            q2 = build_query(v, carrera, mode="strict", pais=pais, universidad=universidad, max_terms=4)
             stop = evaluate(fetch_query(q2, 10))
             if stop:
                 break
@@ -290,7 +301,7 @@ def build_output(best_score, best_item, best_flags, top3_by_score, conf):
 
 # -------------------------- Lotes --------------------------
 
-def run_lote(input_xlsx, output_xlsx, key_manager, cache, cache_path):
+def run_lote(input_xlsx, output_xlsx, key_manager, cache, cache_path, pais: str = "EC"):
 
     if Path(output_xlsx).exists():
         print("Reanudando desde archivo existente...")
@@ -337,7 +348,10 @@ def run_lote(input_xlsx, output_xlsx, key_manager, cache, cache_path):
             or safe_str(row.get("año_graduacion"))
         )
 
-        out = process_row(estudiante, carrera, key_manager, cache, anio_graduacion)
+        # Para CR: leer universidad específica del estudiante
+        universidad = safe_str(row.get("Universidad")) if pais == "CR" else "" #### cambiar para adapatar al campo leido
+
+        out = process_row(estudiante, carrera, key_manager, cache, anio_graduacion, pais=pais, universidad=universidad)
 
         # Si la URL ya fue asignada a otra persona en este lote, no reutilizar
         url_norm = _norm_url(out["best_url"])
@@ -372,16 +386,41 @@ def run_lote(input_xlsx, output_xlsx, key_manager, cache, cache_path):
 
 # -------------------------- MAIN --------------------------
 
+PAISES = {
+    "1": {"codigo": "EC", "nombre": "Ecuador",    "carpeta": "Ecuador"},
+    "2": {"codigo": "CR", "nombre": "Costa Rica", "carpeta": "Costa_Rica"},
+}
+
+
+def select_pais() -> dict:
+    print("\n=== BAVE Search — Seleccion de pais ===")
+    for key, info in PAISES.items():
+        print(f"  {key}. {info['nombre']} ({info['codigo']})")
+    print()
+
+    while True:
+        opcion = input("Selecciona el pais [1/2]: ").strip()
+        if opcion in PAISES:
+            seleccion = PAISES[opcion]
+            print(f"-> Procesando: {seleccion['nombre']} ({seleccion['codigo']})\n")
+            return seleccion
+        print("Opcion invalida. Ingresa 1 o 2.")
+
+
 def main():
     load_dotenv()
 
+    pais_info = select_pais()
+    pais = pais_info["codigo"]
+    carpeta = pais_info["carpeta"]
+
     key_manager = SerperKeyManager.from_env()
 
-    in_dir = Path("data/lotes")
-    out_dir = Path("data/output")
+    in_dir = Path(f"data/{carpeta}/lotes")
+    out_dir = Path(f"data/{carpeta}/output")
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    cache_path = "cache/serper_cache.json"
+    cache_path = f"cache/serper_cache_{pais.lower()}.json"
     cache = load_cache(cache_path)
 
     lotes = sorted(in_dir.glob("estudiantes_lote_*.xlsx"))
@@ -398,9 +437,10 @@ def main():
             key_manager=key_manager,
             cache=cache,
             cache_path=cache_path,
+            pais=pais,
         )
 
-    print("🎉 Listo. Todos los lotes procesados.")
+    print("Listo. Todos los lotes procesados.")
 
 
 if __name__ == "__main__":

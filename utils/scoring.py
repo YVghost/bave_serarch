@@ -160,21 +160,23 @@ def slug_gating_pass(estudiante: str, url: str, title_snippet_text: str):
 
 
 # -------------------------------------------------
-# VALIDACIÓN UDLA (EC) OBLIGATORIA
+# VALIDACIÓN UDLA OBLIGATORIA (por país)
 # -------------------------------------------------
 
-def udla_ec_required(text: str) -> bool:
+def udla_ec_required(text: str, pais: str = "EC", universidad: str = "") -> bool:
     """
-    Debe mencionar explícitamente:
-    - (EC)
-    Y estar asociado a:
-    - UDLA
-    - Universidad de las Américas
+    EC: valida que el texto contenga (EC) + UDLA / Universidad de las Américas.
+    CR: si se provee el nombre de la universidad, valida que aparezca en el texto.
+        Si no se provee, cae al mismo chequeo de tag (CR) + nombre.
     """
 
     t = norm(text)
 
-    if "(ec)" not in t:
+    if pais == "CR" and universidad:
+        return norm(universidad) in t
+
+    tag = f"({pais.lower()})"
+    if tag not in t:
         return False
 
     if "udla" in t:
@@ -295,7 +297,7 @@ def name_closeness_for_item(estudiante: str, item: dict) -> int:
 # MAIN SCORING
 # -------------------------------------------------
 
-def score_candidate(carrera: str, estudiante: str, item: dict, anio_graduacion=None):
+def score_candidate(carrera: str, estudiante: str, item: dict, anio_graduacion=None, pais: str = "EC", universidad: str = ""):
 
     url = item.get("url", "") or ""
     title = item.get("title", "") or ""
@@ -312,8 +314,8 @@ def score_candidate(carrera: str, estudiante: str, item: dict, anio_graduacion=N
     if not slug_gating_pass(estudiante, url, f"{title} {snippet}"):
         return 0, {"udla": False, "carrera": False, "nombre": False, "anio": None}, {}
 
-    # UDLA (EC) OBLIGATORIO
-    if not udla_ec_required(t):
+    # UDLA OBLIGATORIO (por país)
+    if not udla_ec_required(t, pais, universidad):
         return 0, {"udla": False, "carrera": False, "nombre": True, "anio": None}, {}
 
     # SCORING
