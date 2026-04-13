@@ -1,5 +1,135 @@
-python main_run_lote.py --in estudiantes_lote_001.xlsx --out estudiantes_lote_001_enriquecido.xlsx
+# BAVE Search — LinkedIn Profile Enrichment
 
+## Ejecución principal
 
-python main_run_lote.py ## escrito en codigo 
+```bash
+python main_serper.py
+```
 
+Pregunta el país al inicio (1 = Ecuador, 2 = Costa Rica) y procesa todos los
+lotes disponibles en `data/{Pais}/lotes/`.
+
+---
+
+## Estructura de carpetas
+
+```
+data/
+├── Ecuador/
+│   ├── dividir/    <- colocar archivos .xlsx originales aquí
+│   ├── lotes/      <- se generan automáticamente al correr el script
+│   └── output/     <- resultados enriquecidos
+└── Costa_Rica/
+    ├── dividir/
+    ├── lotes/
+    └── output/
+cache/
+    serper_cache_ec.json
+    serper_cache_cr.json
+```
+
+Los archivos en `dividir/` se parten automáticamente en lotes de 1000 filas
+la primera vez que se corre el script. Si los lotes ya existen, se omite el
+paso de división.
+
+---
+
+## Columnas de entrada
+
+### Ecuador
+| Columna | Descripción |
+|---|---|
+| Estudiante | Nombre completo (formato Ap1 Ap2 N1 N2) |
+| Carrera | Carrera del estudiante |
+| Anio_Graduacion | Año de graduación (opcional) |
+
+### Costa Rica
+| Columna | Descripción |
+|---|---|
+| nombre | Nombre completo (formato N1 N2 Ap1 Ap2) |
+| carrera | Carrera del estudiante |
+| universidad | Universidad específica del estudiante |
+| cedula | Cédula (se preserva en el output) |
+| carnet | Carnet (se preserva en el output) |
+| anio_graduacion | Año de graduación (opcional) |
+
+---
+
+## Columnas de salida
+
+| Columna | Valores posibles |
+|---|---|
+| LinkedIn | URL del perfil o `SR` (sin resultado) |
+| Score | 0–100 |
+| Confianza | `ALTA` / `REVISAR` / `BAJA` / `NO_ENCONTRADO` |
+| Estudia_o_Estudio | `ESTUDIA` / `ESTUDIÓ` / `NO DETERMINADO` |
+| Candidatos_Top3 | `url\|score ; url\|score ; url\|score` |
+| Match_UDLA | `SI` / `NO/DUDOSO` |
+| Match_Carrera | `SI` / `NO/DUDOSO` |
+| Match_Anio | `MATCH` / `NO COINCIDE` / `SIN INFO` |
+| Cedula | (solo si existe en el input) |
+| Carnet | (solo si existe en el input) |
+
+---
+
+## Consolidar resultados
+
+```bash
+python utils/consolidar.py
+# genera: data/output/estudiantes_consolidado.xlsx
+```
+
+---
+
+## Test de filas individuales
+
+Permite probar filas específicas del pipeline sin procesar el lote completo.
+Útil para depurar y afinar el scoring.
+
+### Modo interactivo (pregunta todo)
+```bash
+python test_row.py
+```
+
+### Fila específica de un lote
+```bash
+python test_row.py --pais CR --fila 5
+python test_row.py --pais EC --fila 12 --archivo estudiantes_lote_001.xlsx
+```
+
+### Modo manual (sin Excel)
+```bash
+# Costa Rica
+python test_row.py --pais CR \
+  --nombre "PATRICIA CORDERO QUIROS" \
+  --carrera "Administracion de Empresas" \
+  --universidad "Universidad Latina de Costa Rica"
+
+# Ecuador
+python test_row.py --pais EC \
+  --nombre "GARCIA LOPEZ JUAN CARLOS" \
+  --carrera "Ingenieria de Software"
+```
+
+### Qué muestra el test
+
+- Variantes de nombre generadas para la búsqueda
+- Keywords expandidos de la carrera (español + inglés)
+- Cada query ejecutada: si vino del cache o de la API, y cuántos resultados retornó
+- Por cada candidato con score > 0:
+  - URL, título y snippet
+  - Resultado de cada gate (nombre en slug, universidad)
+  - Score detallado y flags
+- Si ningún candidato pasa los gates: muestra por qué falla cada perfil LinkedIn encontrado
+- Resultado final con nivel de confianza y umbrales aplicados
+
+---
+
+## Variables de entorno (.env)
+
+```
+SERPER_API_KEYS=key1,key2,key3
+# o también:
+SERPER_API_KEY_1=key1
+SERPER_API_KEY_2=key2
+```

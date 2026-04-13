@@ -59,19 +59,18 @@ def is_profile_url(url: str) -> bool:
 
 def extract_slug(url: str) -> str:
     try:
-        u = (url or "").split("?")[0]  # quitar query params (?trk=...)
+        from urllib.parse import unquote
+        u = unquote(url or "").split("?")[0]  # decodifica %C3%B3 → ó, quita params
         slug = u.split("/in/")[1]
         slug = slug.split("/")[0]
         slug = slug.replace("-", " ")
-        return norm(slug)
+        return norm(slug)                      # norm() quita tildes: ó → o
     except Exception:
         return ""
 
 
 # -------------------------------------------------
-# DATASET PARSING
-# EC: APELLIDO1 APELLIDO2 NOMBRE1 NOMBRE2
-# CR: NOMBRE1 NOMBRE2 APELLIDO1 APELLIDO2
+# DATASET PARSING — EC: APELLIDO1 APELLIDO2 NOMBRE1 NOMBRE2
 # -------------------------------------------------
 
 CONNECTORS = {"de", "del", "la", "las", "los", "y", "san", "santa", "da", "do", "dos", "von", "van"}
@@ -97,32 +96,6 @@ def split_nombre_dataset(nombre: str):
     nombres = parts[2:] if len(parts) >= 3 else []
 
     return nombres, ap1, ap2
-
-
-def split_nombre_cr(nombre: str):
-    """
-    Formato CR: N1 [N2] Ap1 [Ap2]
-    Los apellidos son los últimos 2 tokens; los nombres, los anteriores.
-    """
-    parts = [p for p in norm(nombre).split() if len(p) >= 2]
-    if len(parts) < 2:
-        return [], None, None
-
-    if len(parts) == 2:
-        return [parts[0]], parts[1], ""
-
-    ap2 = parts[-1]
-    ap1 = parts[-2]
-    nombres = parts[:-2]
-
-    return nombres, ap1, ap2
-
-
-def split_by_pais(nombre: str, pais: str = "EC"):
-    """Despachador: elige el parser correcto según el país."""
-    if pais == "CR":
-        return split_nombre_cr(nombre)
-    return split_nombre_dataset(nombre)
 
 
 def _ap_in_slug(ap: str, slug: str, slug_tokens: set) -> bool:
@@ -156,35 +129,19 @@ def fuzzy_ratio(a: str, b: str) -> int:
 
 
 # -------------------------------------------------
-# SLUG GATING ESTRICTO
+# SLUG GATING — EC
 # -------------------------------------------------
 
-def slug_gating_pass(estudiante: str, url: str, title_snippet_text: str, pais: str = "EC"):
+def slug_gating_pass(estudiante: str, url: str, title_snippet_text: str) -> bool:
     """
-    EC: apellido en slug (ap1 o ap2) + nombre en slug o texto.
-    CR: ap1 Y ap2 ambos en slug + al menos un nombre en el slug.
-        Si ap2 vacío o muy corto, basta ap1 en slug + nombre en slug.
+    EC: apellido (ap1 o ap2) en slug + nombre en slug o texto.
     """
     slug = extract_slug(url)
     slug_tokens = token_set(slug)
     txt_tokens = token_set(title_snippet_text)
 
-    nombres, ap1, ap2 = split_by_pais(estudiante, pais)
+    nombres, ap1, ap2 = split_nombre_dataset(estudiante)
 
-    if pais == "CR":
-        # Ap1 obligatorio en slug siempre
-        if not _ap_in_slug(ap1, slug, slug_tokens):
-            return False
-
-        # Si ap2 existe y tiene largo suficiente, también debe estar en slug
-        if ap2 and len(ap2) > 2:
-            if not _ap_in_slug(ap2, slug, slug_tokens):
-                return False
-
-        # Nombre obligatorio en slug (no solo en texto)
-        return any(n and n in slug_tokens for n in nombres)
-
-    # EC: comportamiento original
     ap_ok = _ap_in_slug(ap1, slug, slug_tokens) or _ap_in_slug(ap2, slug, slug_tokens)
     if not ap_ok:
         return False
@@ -194,16 +151,16 @@ def slug_gating_pass(estudiante: str, url: str, title_snippet_text: str, pais: s
 
 
 # -------------------------------------------------
-# VALIDACIÓN UDLA OBLIGATORIA (por país)
+# UDLA OBLIGATORIA (EC)
 # -------------------------------------------------
 
-def udla_ec_required(text: str, pais: str = "EC", universidad: str = "") -> bool:
+def udla_ec_required(text: str, universidad: str = "", strict: bool = False) -> bool:
     from utils.pais_config import validate_universidad
-    return validate_universidad(norm(text), pais, universidad)
+    return validate_universidad(norm(text), "EC", universidad, strict=strict)
 
 
 # -------------------------------------------------
-# Career score refinado
+# Career score
 # -------------------------------------------------
 
 def career_score(text: str, carrera: str) -> int:
@@ -267,15 +224,14 @@ def infer_study_status(text: str) -> str:
 
 
 # -------------------------------------------------
-# NUEVA FUNCIÓN AGREGADA (NO BORRA NADA)
+# Name closeness — EC
 # -------------------------------------------------
 
-def name_closeness_for_item(estudiante: str, item: dict, pais: str = "EC") -> int:
+def name_closeness_for_item(estudiante: str, item: dict) -> int:
     """
     Métrica comparativa para desempatar candidatos válidos.
     NO es un gate, solo sirve para elegir el mejor del TOP.
     """
-
     url = item.get("url", "") or ""
     title = item.get("title", "") or ""
     snippet = item.get("snippet", "") or ""
@@ -284,7 +240,7 @@ def name_closeness_for_item(estudiante: str, item: dict, pais: str = "EC") -> in
     slug_tokens = token_set(slug)
     txt_tokens = token_set(f"{title} {snippet}")
 
-    nombres, ap1, ap2 = split_by_pais(estudiante, pais)
+    nombres, ap1, ap2 = split_nombre_dataset(estudiante)
 
     score = 0
 
@@ -308,10 +264,11 @@ def name_closeness_for_item(estudiante: str, item: dict, pais: str = "EC") -> in
 
 
 # -------------------------------------------------
-# MAIN SCORING
+# MAIN SCORING — EC
 # -------------------------------------------------
 
-def score_candidate(carrera: str, estudiante: str, item: dict, anio_graduacion=None, pais: str = "EC", universidad: str = ""):
+def score_candidate(carrera: str, estudiante: str, item: dict,
+                    anio_graduacion=None, universidad: str = ""):
 
     url = item.get("url", "") or ""
     title = item.get("title", "") or ""
@@ -324,66 +281,41 @@ def score_candidate(carrera: str, estudiante: str, item: dict, anio_graduacion=N
     text = f"{title} {snippet} {slug}"
     t = norm(text)
 
-    # SLUG GATING (más estricto para CR)
-    if not slug_gating_pass(estudiante, url, f"{title} {snippet}", pais=pais):
+    # SLUG GATING
+    if not slug_gating_pass(estudiante, url, f"{title} {snippet}"):
         return 0, {"udla": False, "carrera": False, "nombre": False, "anio": None}, {}
 
-    # UDLA OBLIGATORIO (por país)
-    if not udla_ec_required(t, pais, universidad):
+    # UDLA OBLIGATORIO
+    if not udla_ec_required(t, universidad):
         return 0, {"udla": False, "carrera": False, "nombre": True, "anio": None}, {}
 
     # SCORING
-    nombres, ap1, ap2 = split_by_pais(estudiante, pais)
+    nombres, ap1, ap2 = split_nombre_dataset(estudiante)
     slug_tokens = token_set(slug)
     txt_tokens = token_set(t)
 
     ap1_in_slug = _ap_in_slug(ap1, slug, slug_tokens)
     ap2_in_slug = _ap_in_slug(ap2, slug, slug_tokens)
 
-    if pais == "CR":
-        # CR: base más baja — necesita demostrar más coincidencias para llegar a REVISAR
-        score = 45
+    score = 60
 
-        cs = career_score(t, carrera)
-        score += cs
+    cs = career_score(t, carrera)
+    score += cs
 
-        # Apellidos en slug
-        if ap1_in_slug:
-            score += 25
-        if ap2_in_slug:
-            score += 20
+    if ap1_in_slug:
+        score += 30
+    if ap2_in_slug:
+        score += 20
 
-        # Nombres: solo cuentan si están en el slug (no en texto libre)
-        for n in nombres:
-            if n and n in slug_tokens:
-                score += 10
-
-        # Bonus fuzzy solo si es muy alto
-        sim2 = fuzzy_ratio(estudiante, f"{slug} {title}")
-        if sim2 >= 95:
+    for n in nombres:
+        if n in slug_tokens or n in txt_tokens:
             score += 10
 
-    else:
-        # EC: comportamiento original
-        score = 60
+    sim2 = fuzzy_ratio(estudiante, f"{slug} {title}")
+    if sim2 >= 92:
+        score += 10
 
-        cs = career_score(t, carrera)
-        score += cs
-
-        if ap1_in_slug:
-            score += 30
-        if ap2_in_slug:
-            score += 20
-
-        for n in nombres:
-            if n in slug_tokens or n in txt_tokens:
-                score += 10
-
-        sim2 = fuzzy_ratio(estudiante, f"{slug} {title}")
-        if sim2 >= 92:
-            score += 10
-
-    # AÑO DE GRADUACIÓN: bonus si coincide, penalización si hay años pero no coinciden
+    # AÑO DE GRADUACIÓN
     anio_delta, anio_status = graduation_year_score(t, anio_graduacion)
     score += anio_delta
 
