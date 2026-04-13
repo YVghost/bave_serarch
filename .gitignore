@@ -63,12 +63,12 @@ htmlcov/
 *.sublime-*
 
 # Archivos de datos generados
-output/
-*.json
-!utils/api_keys.json  # Si quieres mantener este archivo específico
-lotes/
-data/
-!data/.gitkeep
+#output/
+#*.json
+#!utils/api_keys.json  # Si quieres mantener este archivo específico
+#lotes/
+#data/
+#!data/.gitkeep
 
 # Archivos de tests
 .pytest_cache/
