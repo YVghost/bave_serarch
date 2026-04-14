@@ -1,0 +1,1093 @@
+﻿estudiante,carrera,anio_graduacion,universidad,dbg_accepted,dbg_stage,dbg_reason
+YERANIA NICOLE MORA MANZANARES,CIENCIAS DE LA EDUCACIÓN,2021,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+YERANIA NICOLE MORA MANZANARES,CIENCIAS DE LA EDUCACIÓN,2022,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+DIANA MARCELA MORA MORA,CIENCIAS DE LA EDUCACIÓN,2025,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+ROGELYN LAKEYSHA JAMES BOGANTES,TERAPIA FÍSICA,2023,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+JOSEF FRANCISCO NAJERA MOYA,CIENCIAS DE LA EDUCACIÓN,2021,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+HENRY JAVIER AZOFEIFA ASTORGA,CIENCIAS DE LA EDUCACIÓN,2022,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+DIXON JAVIER VALLEJOS MORERA,ADMINISTRACIÓN DE NEGOCIOS,2025,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+SHERYL DURÁN ZUÑIGA,CIENCIAS DE LA EDUCACIÓN,2024,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+MELANI TALIA SALAZAR VARGAS,CIENCIAS DE LA EDUCACIÓN,2025,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+WALTER ANDRE MUÑOZ LOPEZ,CIENCIAS DE LA EDUCACIÓN,2023,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+SHERELYN ANDREA PARRA QUESADA,CIENCIAS DE LA EDUCACIÓN,2025,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+JAMES DANNY CIEZAR MENDEZ,TÉCNICO EN DISEÑO GRÁFICO,2021,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+JIMENA BUITRAGO MARTINEZ,CONTROL DE CALIDAD Y LOGÍSTICA,2023,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+LUIS EMILIO DUARTE PEDROZA,ADMINISTRACIÓN EDUCATIVA,2016,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+MARIA AMALIA PORTA NUÑEZ,ADMINISTRACIÓN EDUCATIVA,2014,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+CARL EDWARD VINCENT MADRUEÑO,LA ENSEÑANZA DEL INGLÉS,2017,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+ERNESTO FUENTES BARRIOS,ADMINISTRACIÓN EDUCATIVA,2015,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+ANA RUTH TORPOCO CHAVEZ,CIENCIAS DE LA EDUCACIÓN EN LA ENSEÑANZA DE LA CIENCIA,2016,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+CLAUDIA HELGA CHAVEZ QUEVEDO,ADMINISTRACIÓN DE NEGOCIOS,2015,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+SANDRA ISABEL CASTILLO VIVAS,DISEÑO PUBLICITARIO,2016,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+KARLA ROBLERO VEGA,LA ENSEÑANZA DEL INGLÉS,2017,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+ANA MARIA QUIROS RIVERA,DERECHO,2023,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+KEVIN YESID SERRANO ARROYO,INGENIERÍA DE SISTEMAS,2019,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+VLADIMIR SAVOV DISHEV DISHEVA,CIENCIAS DE LA EDUCACIÓN,2016,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+ANA PATRICIA GUZMAN GOMEZ,CONTADURÍA,2025,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+YURI MARCELA MEJIA RIOS,COMUNICACIÓN DE MERCADEO,2015,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+YURI MARCELA MEJIA RIOS,PUBLICIDAD,2015,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+INYORI SELENE ALVAREZ ALVAREZ,ADMINISTRACIÓN DE NEGOCIOS,2015,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+INYORI SELENE ALVAREZ ALVAREZ,ADMINISTRACIÓN DE NEGOCIOS,2017,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+ELSA MASSIELL DIAZ GARCIA,INGENIERÍA INDUSTRIAL,2024,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+JACQUELINE DEL SOCORRO GONZALEZ GARCIA,CONTADURÍA,2017,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+BERSY APAZA VIVEROS,CONTABILIDAD,2018,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+JESSIKA DE LOS ANGELES TAPIA MANZANAREZ,ADMINISTRACIÓN DE NEGOCIOS,2019,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+JENNY CAROLINA VARGAS MACIAS,CONTADURÍA,2020,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+JENNY CAROLINA VARGAS MACIAS,CONTADURÍA PÚBLICA,2021,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+ANGELICA MARIA ARENAS RANGEL,CONTADURÍA,2016,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+BISMAR JOSE ARCIA BARRIOS,CONTADURÍA,2025,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+BISMAR JOSE ARCIA BARRIOS,CONTADURÍA PÚBLICA,2025,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+ANA DILCIA INTERIANO DIAZ,TERAPIA FÍSICA,2016,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+DAYANA VERONICA MEDINA GARCIA,DERECHO,2018,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+DAYANA VERONICA MEDINA GARCIA,DERECHO,2019,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+FABIOLA JOSUE URROZ CASTILLO,ADMINISTRACIÓN DE NEGOCIOS,2021,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+ANGIE MILETH REINA HERRERA,CIENCIAS DE LA EDUCACIÓN,2020,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+JONATHAN EZEQUIEL LARA ALTAMIRANO,CONTADURÍA,2019,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+ELIA MARIA CANALES HERRERA,ADMINISTRACIÓN DE NEGOCIOS,2021,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+GREYDIS JAZAHEL DIAZ ALVAREZ,ADMINISTRACIÓN DE NEGOCIOS,2025,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+MONICA ALICIA SOLANO FRANCO,ADMINISTRACIÓN DE NEGOCIOS,2023,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+VERONICA RAQUEL AMADOR MARTINEZ,TERAPIA FÍSICA,2024,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+MARIA CRISTINA MUÑOZ JARAMILLO,CONTADURÍA,2023,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+CRISTINA AUXILIADORA SARMIENTO SANCHEZ,TÉCNICO EN ADMINISTRACIÓN DE NEGOCIOS,2021,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+EMERSON BLADIMIR BOLAÑOS BORGE,ADMINISTRACIÓN DE NEGOCIOS,2023,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+STEFANY VALLEJO QUINTERO,ADMINISTRACIÓN DE NEGOCIOS,2022,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+FERNANDA ZOHET RIVERA VALLECILLO,ADMINISTRACIÓN DE NEGOCIOS,2025,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+WISTON ROMAN BALLADARES TENORIO,CONTADURÍA,2024,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+ROBERTO JOSUE DIAZ MATEY,DERECHO,2018,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+ROBERTO JOSUE DIAZ MATEY,DERECHO,2021,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+ENGEL ISMAEL GONZALEZ MEZA,TÉCNICO EN DISEÑO GRÁFICO,2022,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+JAMY TATIANA ESPINOZA MARIN,TÉCNICO EN DISEÑO GRÁFICO,2025,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+MARCIO LENIN ZELEDON CONTRERAS,GESTIÓN DE PROCESOS,2022,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+JASEN YAEL GONZALEZ PARRA,CONTROL DE CALIDAD Y LOGÍSTICA,2024,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+ALICIA DE ARMAS HERNANDEZ,INGENIERÍA DE SISTEMAS,2023,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+ESTEFANY GABRIELA ALTAMIRANO MOLINA,TÉCNICO EN CONTABILIDAD Y FINANZAS,2020,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+ARMENIA EPIFANIA MAYORGA MORA,ADMINISTRACIÓN EDUCATIVA,2014,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+MARIA FABIOLA JIMENEZ MONGALO,TÉCNICO EN ADMINISTRACIÓN DE NEGOCIOS,2020,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+MARIA DEL ROCIO SALAZAR TREJOS,DERECHO,2021,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+MARIA DEL ROCIO SALAZAR TREJOS,DERECHO,2022,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+ROBERTO ALONSO SERRANO CASTRO,TÉCNICO EN LOGÍSTICA,2020,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+GRACE MARIE BEITA BERMUDEZ,ADMINISTRACIÓN DE NEGOCIOS,2018,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+LEONEL ARMANDO VINDAS SANCHEZ,TÉCNICO EN CONTABILIDAD Y FINANZAS,2021,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+MELINA RODRIGUEZ CARBALLO,DISEÑO PUBLICITARIO,2017,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+ALVARO MANUEL DARIO JINESTA,CONTADURÍA,2021,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+ADRIANA CRUZ MATA,ADMINISTRACIÓN DE NEGOCIOS,2017,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+ADRIANA CRUZ MATA,ADMINISTRACIÓN DE NEGOCIOS,2018,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+CHRISTIAN ORLANDO VILLALOBOS VASQUEZ,LA ENSEÑANZA DEL INGLÉS,2017,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+DAYANA VASQUEZ MAYORGA,TÉCNICO EN ADMINISTRACIÓN DE NEGOCIOS,2022,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+BLANCA SOFIA ORTEGA CASTRILLO,DISEÑO PUBLICITARIO,2025,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+VALERIA MARIA BARRANTES GRANADOS,DERECHO,2022,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
+CHRISTIAN ENRRIQUE CHAVERRI BRENES,CONTABILIDAD Y FINANZAS,2024,UAM,False,exception,"Traceback (most recent call last):
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 249, in process_row
+    stop = evaluate(fetch_query(q1, 15), q1, v)
+                    ~~~~~~~~~~~^^^^^^^^
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\main_serper.py"", line 186, in fetch_query
+    results = serper_search_with_rotation(
+        key_manager=key_manager,
+    ...<2 lines>...
+        max_retries=5,
+    )
+  File ""C:\Users\pasante.investigac02\Desktop\Repo_Mateo_Ortega\bave_serarch\utils\serper_client.py"", line 154, in serper_search_with_rotation
+    raise RuntimeError(""No hay keys disponibles."")
+RuntimeError: No hay keys disponibles.
+"
