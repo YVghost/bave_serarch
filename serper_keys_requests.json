@@ -61,15 +61,15 @@
   },
   "964fe28e3c2923c39048083c7a6b5ade096ebb1c": {
     "key": "964fe28e3c2923c39048083c7a6b5ade096ebb1c",
-    "request_count": 0,
-    "last_request_date": "2026-04-13T08:57:46.784712",
-    "disabled_until": null
+    "request_count": 2400,
+    "last_request_date": "2026-04-13T14:17:47.378311",
+    "disabled_until": "2026-05-14T14:17:47.378350"
   },
   "042280097f1a434fbd43b63c93118428589d9858": {
     "key": "042280097f1a434fbd43b63c93118428589d9858",
-    "request_count": 0,
-    "last_request_date": "2026-04-13T09:21:26.324633",
-    "disabled_until": null
+    "request_count": 2400,
+    "last_request_date": "2026-04-13T17:12:31.467041",
+    "disabled_until": "2026-05-14T17:12:31.467081"
   },
   "ddd2937d63f5ea91d8123d18f53668ca98ae14ff": {
     "key": "ddd2937d63f5ea91d8123d18f53668ca98ae14ff",
