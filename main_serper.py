@@ -31,6 +31,68 @@ RETRY_SR = True
 EARLY_STOP_SCORE = 92
 DEBUG_LOG = True
 
+# -------------------------- NUEVO: control de fallos --------------------------
+MAX_CONSECUTIVE_ERRORS = 10
+MAX_TOTAL_FETCH_ERRORS = 25
+
+
+class FatalProcessError(Exception):
+    pass
+
+
+class ProcessState:
+    def __init__(self):
+        self.consecutive_errors = 0
+        self.total_fetch_errors = 0
+        self.stop_requested = False
+        self.stop_reason = ""
+
+    def register_success(self):
+        self.consecutive_errors = 0
+
+    def register_error(self, reason: str):
+        self.consecutive_errors += 1
+        self.total_fetch_errors += 1
+
+        if self._looks_like_api_exhausted(reason):
+            self.stop_requested = True
+            self.stop_reason = f"APIs agotadas o no disponibles: {reason}"
+            raise FatalProcessError(self.stop_reason)
+
+        if self.consecutive_errors >= MAX_CONSECUTIVE_ERRORS:
+            self.stop_requested = True
+            self.stop_reason = f"Se alcanzó el máximo de errores consecutivos ({self.consecutive_errors}). Último error: {reason}"
+            raise FatalProcessError(self.stop_reason)
+
+        if self.total_fetch_errors >= MAX_TOTAL_FETCH_ERRORS:
+            self.stop_requested = True
+            self.stop_reason = f"Se alcanzó el máximo de errores acumulados ({self.total_fetch_errors}). Último error: {reason}"
+            raise FatalProcessError(self.stop_reason)
+
+    @staticmethod
+    def _looks_like_api_exhausted(reason: str) -> bool:
+        r = (reason or "").lower()
+        patterns = [
+            "429",
+            "quota",
+            "rate limit",
+            "rate-limit",
+            "too many requests",
+            "api key",
+            "api keys",
+            "no api",
+            "no keys",
+            "sin api",
+            "sin keys",
+            "agotad",
+            "exhaust",
+            "limit exceeded",
+            "insufficient quota",
+            "forbidden",
+            "unauthorized",
+        ]
+        return any(p in r for p in patterns)
+
 
 def wait_api():
     time.sleep(random.uniform(DELAY_API_MIN, DELAY_API_MAX))
@@ -113,7 +175,19 @@ def is_already_filled(v: str) -> bool:
     return v.startswith("http") and "linkedin.com" in v.lower()
 
 
-def append_debug_row(debug_rows: list, estudiante: str, carrera: str, anio_graduacion, universidad: str, query: str, variant: str, item: dict, score: int, flags: dict, debug: dict):
+def append_debug_row(
+    debug_rows: list,
+    estudiante: str,
+    carrera: str,
+    anio_graduacion,
+    universidad: str,
+    query: str,
+    variant: str,
+    item: dict,
+    score: int,
+    flags: dict,
+    debug: dict,
+):
     row = {
         "estudiante": estudiante,
         "carrera": carrera,
@@ -166,7 +240,17 @@ def build_output_names(input_xlsx: str, pais: str, out_dir: Path):
     return out_dir / excel_name, out_dir / log_name
 
 
-def process_row(estudiante: str, carrera: str, key_manager, cache: dict, anio_graduacion=None, pais: str = "EC", universidad: str = "", debug_rows: list | None = None):
+def process_row(
+    estudiante: str,
+    carrera: str,
+    key_manager,
+    cache: dict,
+    process_state: ProcessState,
+    anio_graduacion=None,
+    pais: str = "EC",
+    universidad: str = "",
+    debug_rows: list | None = None,
+):
     _scoring = _scoring_cr if pais == "CR" else _scoring_ec
 
     try:
@@ -182,15 +266,28 @@ def process_row(estudiante: str, carrera: str, key_manager, cache: dict, anio_gr
             if ck in cache:
                 return cache[ck]
 
-            wait_api()
-            results = serper_search_with_rotation(
-                key_manager=key_manager,
-                query=q,
-                count=count,
-                max_retries=5,
-            )
-            cache[ck] = results
-            return results
+            try:
+                wait_api()
+                results = serper_search_with_rotation(
+                    key_manager=key_manager,
+                    query=q,
+                    count=count,
+                    max_retries=5,
+                )
+
+                if results is None:
+                    raise RuntimeError("serper_search_with_rotation devolvió None")
+
+                cache[ck] = results
+                process_state.register_success()
+                return results
+
+            except FatalProcessError:
+                raise
+            except Exception as e:
+                reason = str(e) or e.__class__.__name__
+                process_state.register_error(reason)
+                raise
 
         def evaluate(results, query_used: str, variant_used: str):
             nonlocal scored_all
@@ -199,10 +296,17 @@ def process_row(estudiante: str, carrera: str, key_manager, cache: dict, anio_gr
                 if not is_profile_url(it.get("url", "")):
                     if DEBUG_LOG and debug_rows is not None:
                         append_debug_row(
-                            debug_rows, estudiante, carrera, anio_graduacion, universidad,
-                            query_used, variant_used, it, 0,
+                            debug_rows,
+                            estudiante,
+                            carrera,
+                            anio_graduacion,
+                            universidad,
+                            query_used,
+                            variant_used,
+                            it,
+                            0,
                             {"udla": False, "carrera": False, "nombre": False, "anio": None},
-                            {"accepted": False, "stage": "profile_url", "reason": "url_no_es_perfil"}
+                            {"accepted": False, "stage": "profile_url", "reason": "url_no_es_perfil"},
                         )
                     continue
 
@@ -212,7 +316,7 @@ def process_row(estudiante: str, carrera: str, key_manager, cache: dict, anio_gr
                         estudiante,
                         it,
                         anio_graduacion,
-                        universidad=universidad
+                        universidad=universidad,
                     )
                 else:
                     s, flags, debug = _scoring.score_candidate(
@@ -220,7 +324,7 @@ def process_row(estudiante: str, carrera: str, key_manager, cache: dict, anio_gr
                         estudiante,
                         it,
                         anio_graduacion,
-                        universidad=universidad
+                        universidad=universidad,
                     )
                     if not isinstance(debug, dict):
                         debug = {}
@@ -229,8 +333,17 @@ def process_row(estudiante: str, carrera: str, key_manager, cache: dict, anio_gr
 
                 if DEBUG_LOG and debug_rows is not None:
                     append_debug_row(
-                        debug_rows, estudiante, carrera, anio_graduacion, universidad,
-                        query_used, variant_used, it, s, flags, debug
+                        debug_rows,
+                        estudiante,
+                        carrera,
+                        anio_graduacion,
+                        universidad,
+                        query_used,
+                        variant_used,
+                        it,
+                        s,
+                        flags,
+                        debug,
                     )
 
                 if s <= 0:
@@ -297,6 +410,8 @@ def process_row(estudiante: str, carrera: str, key_manager, cache: dict, anio_gr
 
         return build_output(best_score, best_item, best_flags, top3_by_score, conf)
 
+    except FatalProcessError:
+        raise
     except Exception:
         traceback.print_exc()
         if DEBUG_LOG and debug_rows is not None:
@@ -350,7 +465,16 @@ def build_output(best_score, best_item, best_flags, top3_by_score, conf):
     }
 
 
-def run_lote(input_xlsx, output_xlsx, key_manager, cache, cache_path, pais: str = "EC", debug_csv_path: str | None = None):
+def run_lote(
+    input_xlsx,
+    output_xlsx,
+    key_manager,
+    cache,
+    cache_path,
+    process_state: ProcessState,
+    pais: str = "EC",
+    debug_csv_path: str | None = None,
+):
     if Path(output_xlsx).exists():
         print("Reanudando desde archivo existente...")
         df = pd.read_excel(output_xlsx)
@@ -376,78 +500,87 @@ def run_lote(input_xlsx, output_xlsx, key_manager, cache, cache_path, pais: str 
         if is_already_filled(v):
             assigned_urls.add(_norm_url(v))
 
-    for i, row in df.iterrows():
-        linkedin_val = safe_str(row.get("LinkedIn"))
-        score_val = int(row.get("Score") or 0)
-        conf_val = safe_str(row.get("Confianza"))
+    try:
+        for i, row in df.iterrows():
+            if process_state.stop_requested:
+                raise FatalProcessError(process_state.stop_reason or "Stop solicitado")
 
-        if is_already_filled(linkedin_val) and score_val > 0 and conf_val:
-            continue
+            linkedin_val = safe_str(row.get("LinkedIn"))
+            score_val = int(row.get("Score") or 0)
+            conf_val = safe_str(row.get("Confianza"))
 
-        if (not RETRY_SR) and (linkedin_val == "SR"):
-            continue
+            if is_already_filled(linkedin_val) and score_val > 0 and conf_val:
+                continue
 
-        estudiante = resolve_col(row, "nombre", "Estudiante", "NOMBRE")
-        carrera = resolve_col(row, "carrera", "Carrera", "CARRERA")
+            if (not RETRY_SR) and (linkedin_val == "SR"):
+                continue
 
-        if not estudiante or not carrera:
-            continue
+            estudiante = resolve_col(row, "nombre", "Estudiante", "NOMBRE")
+            carrera = resolve_col(row, "carrera", "Carrera", "CARRERA")
 
-        anio_graduacion = resolve_col(row, "anio_graduacion", "Anio_Graduacion", "año_graduacion")
-        universidad = resolve_col(row, "universidad", "Universidad") if pais == "CR" else ""
+            if not estudiante or not carrera:
+                continue
 
-        out = process_row(
-            estudiante,
-            carrera,
-            key_manager,
-            cache,
-            anio_graduacion,
-            pais=pais,
-            universidad=universidad,
-            debug_rows=debug_rows
-        )
+            anio_graduacion = resolve_col(row, "anio_graduacion", "Anio_Graduacion", "año_graduacion")
+            universidad = resolve_col(row, "universidad", "Universidad") if pais == "CR" else ""
 
-        url_norm = _norm_url(out["best_url"])
-        if out["best_url"] and url_norm in assigned_urls:
-            out["best_url"] = ""
-            out["conf"] = "REVISAR"
+            out = process_row(
+                estudiante,
+                carrera,
+                key_manager,
+                cache,
+                process_state,
+                anio_graduacion,
+                pais=pais,
+                universidad=universidad,
+                debug_rows=debug_rows,
+            )
 
-        if out["best_url"]:
-            assigned_urls.add(url_norm)
+            url_norm = _norm_url(out["best_url"])
+            if out["best_url"] and url_norm in assigned_urls:
+                out["best_url"] = ""
+                out["conf"] = "REVISAR"
 
-        df.at[i, "LinkedIn"] = out["best_url"] if out["best_url"] else "SR"
-        df.at[i, "Score"] = out["score"]
-        df.at[i, "Confianza"] = out["conf"]
-        df.at[i, "Estudia_o_Estudio"] = out["study"]
-        df.at[i, "Candidatos_Top3"] = out["top3"]
-        df.at[i, "Match_UDLA"] = out["match_udla"]
-        df.at[i, "Match_Carrera"] = out["match_carrera"]
-        df.at[i, "Match_Anio"] = out["match_anio"]
+            if out["best_url"]:
+                assigned_urls.add(url_norm)
 
-        for dest, *srcs in [("Cedula", "cedula", "Cedula"), ("Carnet", "carnet", "Carnet")]:
-            val = resolve_col(row, *srcs)
-            if val:
-                if dest not in df.columns:
-                    df[dest] = pd.array([""] * len(df), dtype="string")
-                df.at[i, dest] = val
+            df.at[i, "LinkedIn"] = out["best_url"] if out["best_url"] else "SR"
+            df.at[i, "Score"] = out["score"]
+            df.at[i, "Confianza"] = out["conf"]
+            df.at[i, "Estudia_o_Estudio"] = out["study"]
+            df.at[i, "Candidatos_Top3"] = out["top3"]
+            df.at[i, "Match_UDLA"] = out["match_udla"]
+            df.at[i, "Match_Carrera"] = out["match_carrera"]
+            df.at[i, "Match_Anio"] = out["match_anio"]
 
-        if (i + 1) % SAVE_EVERY == 0:
-            print(f"💾 Guardando progreso en fila {i+1}")
-            df.to_excel(output_xlsx, index=False)
-            save_cache(cache, cache_path)
-            if DEBUG_LOG:
-                save_debug_csv(debug_rows, debug_csv_path)
+            for dest, *srcs in [("Cedula", "cedula", "Cedula"), ("Carnet", "carnet", "Carnet")]:
+                val = resolve_col(row, *srcs)
+                if val:
+                    if dest not in df.columns:
+                        df[dest] = pd.array([""] * len(df), dtype="string")
+                    df.at[i, dest] = val
 
-        time.sleep(DELAY_ROW)
+            if (i + 1) % SAVE_EVERY == 0:
+                print(f"💾 Guardando progreso en fila {i+1}")
+                df.to_excel(output_xlsx, index=False)
+                save_cache(cache, cache_path)
+                if DEBUG_LOG:
+                    save_debug_csv(debug_rows, debug_csv_path)
 
-    df.to_excel(output_xlsx, index=False)
-    save_cache(cache, cache_path)
-    if DEBUG_LOG:
-        save_debug_csv(debug_rows, debug_csv_path)
+            time.sleep(DELAY_ROW)
 
-    print("✅ Lote completado correctamente.")
-    if DEBUG_LOG:
-        print(f"🧪 Log CSV generado en: {debug_csv_path}")
+    except FatalProcessError as e:
+        print(f"🛑 Proceso detenido: {e}")
+
+    finally:
+        df.to_excel(output_xlsx, index=False)
+        save_cache(cache, cache_path)
+        if DEBUG_LOG:
+            save_debug_csv(debug_rows, debug_csv_path)
+
+        print("✅ Guardado final realizado.")
+        if DEBUG_LOG:
+            print(f"🧪 Log CSV generado en: {debug_csv_path}")
 
 
 PAISES = {
@@ -479,6 +612,7 @@ def main():
     carpeta = pais_info["carpeta"]
 
     key_manager = SerperKeyManager.from_env()
+    process_state = ProcessState()
 
     base_dir = f"data/{carpeta}"
     in_dir = Path(f"{base_dir}/lotes")
@@ -497,6 +631,10 @@ def main():
         raise RuntimeError(f"No se encontraron lotes en: {in_dir.resolve()}")
 
     for f in lotes:
+        if process_state.stop_requested:
+            print(f"🛑 Se detiene antes de iniciar otro lote: {process_state.stop_reason}")
+            break
+
         out_file, log_file = build_output_names(str(f), pais, out_dir)
         print(f"[RUN] {f.name} -> {out_file.name}")
 
@@ -506,11 +644,12 @@ def main():
             key_manager=key_manager,
             cache=cache,
             cache_path=cache_path,
+            process_state=process_state,
             pais=pais,
             debug_csv_path=str(log_file),
         )
 
-    print("Listo. Todos los lotes procesados.")
+    print("Listo. Proceso finalizado.")
 
 
 if __name__ == "__main__":
