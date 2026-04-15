@@ -1,0 +1,14 @@
+{
+  "8ec063572858be1371967330caf476f35f70480b": {
+    "key": "8ec063572858be1371967330caf476f35f70480b",
+    "request_count": 2400,
+    "last_request_date": "2026-04-14T13:50:10.256780",
+    "disabled_until": "2026-05-15T13:50:10.256793"
+  },
+  "9d56bd87a546dae2efa75d70e0a98885cbc8a130": {
+    "key": "9d56bd87a546dae2efa75d70e0a98885cbc8a130",
+    "request_count": 2400,
+    "last_request_date": "2026-04-14T16:46:58.593491",
+    "disabled_until": "2026-05-15T16:46:58.593506"
+  }
+}
