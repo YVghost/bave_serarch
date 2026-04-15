@@ -1,0 +1,14 @@
+{
+  "6abc10c5d369aca40ff4f3062079092305eddec7": {
+    "key": "6abc10c5d369aca40ff4f3062079092305eddec7",
+    "request_count": 2400,
+    "last_request_date": "2026-04-14T13:57:44.478606",
+    "disabled_until": "2026-05-15T13:57:44.478628"
+  },
+  "9509afe6fcd03e3e4b79aa3c38850cbcdb40903e": {
+    "key": "9509afe6fcd03e3e4b79aa3c38850cbcdb40903e",
+    "request_count": 2400,
+    "last_request_date": "2026-04-14T16:51:39.360848",
+    "disabled_until": "2026-05-15T16:51:39.360861"
+  }
+}
