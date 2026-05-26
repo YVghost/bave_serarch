@@ -27,7 +27,7 @@ DELAY_API_MAX = 2.5
 DELAY_ROW = 0.8
 SAVE_EVERY = 10
 
-RETRY_SR = True
+RETRY_SR = False
 EARLY_STOP_SCORE = 92
 DEBUG_LOG = True
 
@@ -42,7 +42,7 @@ class FatalProcessError(Exception):
 
 class ProcessState:
     def __init__(self):
-        self.consecutive_errors = 0
+        self.consecutive_errors = 0 
         self.total_fetch_errors = 0
         self.stop_requested = False
         self.stop_reason = ""

@@ -1,0 +1,26 @@
+{
+  "d37a4383c8cf9f074015ddfbe8d9759a07d87704": {
+    "key": "d37a4383c8cf9f074015ddfbe8d9759a07d87704",
+    "request_count": 2400,
+    "last_request_date": "2026-04-15T11:53:46.262101",
+    "disabled_until": "2026-05-16T11:53:46.262101"
+  },
+  "82cdf894641af1a14ab91a179410eea6f664ccd9": {
+    "key": "82cdf894641af1a14ab91a179410eea6f664ccd9",
+    "request_count": 2400,
+    "last_request_date": "2026-04-17T12:10:28.898540",
+    "disabled_until": "2026-05-18T12:10:28.898540"
+  },
+  "4ee7ed66f48f507aa0fc0bf1c1652cc9099565d7": {
+    "key": "4ee7ed66f48f507aa0fc0bf1c1652cc9099565d7",
+    "request_count": 2400,
+    "last_request_date": "2026-04-20T09:19:38.008161",
+    "disabled_until": "2026-05-21T09:19:38.008161"
+  },
+  "3d83ed655f4d04cff5197784216f85a9402e8892": {
+    "key": "3d83ed655f4d04cff5197784216f85a9402e8892",
+    "request_count": 2400,
+    "last_request_date": "2026-04-20T12:28:57.051988",
+    "disabled_until": "2026-05-21T12:28:57.051988"
+  }
+}
